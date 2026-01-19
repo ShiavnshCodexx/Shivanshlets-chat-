@@ -6,162 +6,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:"JetBrains Mono", monospace;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"JetBrains Mono",monospace}
 body{
-  background:#000;
-  color:#00ff9c;
-  min-height:100vh;
-  overflow-x:hidden;
+  background:#000;color:#00ff9c;min-height:100vh;overflow-y:auto;
 }
 
-/* ===== LIVE BACKGROUND LAYERS ===== */
+/* ===== LIVE BACKGROUND (3 LAYERS) ===== */
+.bg-scan,.bg-grid,.bg-glow{position:fixed;inset:0;pointer-events:none}
 .bg-scan{
-  position:fixed; inset:0;
   background:repeating-linear-gradient(
-    to bottom,
-    rgba(0,255,156,.05) 0px,
-    rgba(0,255,156,.05) 1px,
-    transparent 2px,
-    transparent 6px
+    to bottom,rgba(0,255,156,.05) 0 1px,transparent 2px 6px
   );
-  animation:scan 6s linear infinite;
-  z-index:-3;
+  animation:scan 6s linear infinite;z-index:-3
 }
-@keyframes scan{
-  to{background-position:0 400px}
-}
-
+@keyframes scan{to{background-position:0 400px}}
 .bg-grid{
-  position:fixed; inset:0;
   background:
-    linear-gradient(rgba(0,255,156,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,156,.03) 1px, transparent 1px);
-  background-size:60px 60px;
-  animation:grid 20s linear infinite;
-  z-index:-2;
+    linear-gradient(rgba(0,255,156,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,156,.04) 1px,transparent 1px);
+  background-size:40px 40px;z-index:-4
 }
-@keyframes grid{
-  to{background-position:300px 300px}
+.bg-glow{
+  background:radial-gradient(circle at top,rgba(0,255,156,.08),transparent 60%);
+  animation:glow 5s ease-in-out infinite;z-index:-2
 }
+@keyframes glow{50%{opacity:.6}}
 
-.bg-glitch{
-  position:fixed; inset:0;
-  background:linear-gradient(
-    120deg,
-    transparent 40%,
-    rgba(0,255,156,.08),
-    transparent 60%
-  );
-  animation:glitch 4s infinite;
-  z-index:-1;
-}
-@keyframes glitch{
-  0%,100%{opacity:0}
-  50%{opacity:1}
-}
+.container{max-width:900px;margin:auto;padding:20px}
+.header{text-align:center;font-size:1.6rem;margin:20px 0}
+.line{height:1px;background:rgba(0,255,156,.35);margin:10px 0 20px}
 
-/* ===== TERMINAL UI ===== */
-.terminal{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
-}
-.header{
-  text-align:center;
-  font-size:1.7rem;
-  margin-bottom:10px;
-}
-.line{
-  height:1px;
-  background:rgba(0,255,156,.4);
-  margin-bottom:25px;
-}
 .box{
   background:rgba(0,0,0,.85);
-  border:1px solid rgba(0,255,156,.4);
-  padding:18px;
-  margin-bottom:25px;
-  white-space:pre-wrap;
-  line-height:1.6;
+  border:1px solid rgba(0,255,156,.45);
+  padding:16px;margin-bottom:28px;line-height:1.6;white-space:pre-wrap
 }
-.center{
-  text-align:center;
-  margin:40px 0;
-}
+
+.center{text-align:center;margin:18px 0 30px}
 button{
-  background:transparent;
-  border:1px solid #00ff9c;
-  color:#00ff9c;
-  padding:14px 40px;
-  letter-spacing:2px;
-  cursor:pointer;
+  background:transparent;border:1px solid #00ff9c;color:#00ff9c;
+  padding:12px 34px;letter-spacing:2px;cursor:pointer
 }
-button:hover{
-  background:#00ff9c;
-  color:#000;
+button:hover{background:#00ff9c;color:#000}
+
+.hidden{display:none}
+input{
+  background:#000;border:1px solid rgba(0,255,156,.5);
+  color:#00ff9c;padding:10px;width:100%;margin:8px 0
 }
+.staff-box{margin-top:40px}
+.small{opacity:.7;font-size:.85rem}
 </style>
 </head>
 
 <body>
-
-<div class="bg-scan"></div>
 <div class="bg-grid"></div>
-<div class="bg-glitch"></div>
+<div class="bg-scan"></div>
+<div class="bg-glow"></div>
 
-<div class="terminal">
+<div class="container">
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
-  <div class="box" id="boot"></div>
+  <!-- TERMINAL OUTPUT -->
+  <div class="box" id="output"></div>
 
+  <!-- BUTTON WITH GAP -->
   <div class="center">
-    <a id="chatLink">
-      <button>LET'S CHAT</button>
-    </a>
+    <button onclick="startScan()">LET'S CHAT</button>
   </div>
 
-  <div class="box">
-> Click "LET'S CHAT" to initialize secure scan...
+  <!-- SCAN RESULT -->
+  <div class="box" id="info">
+> Click "LET'S CHAT" to scan device...
+  </div>
+
+  <!-- STAFF SECTION -->
+  <div class="staff-box">
+    <div class="line"></div>
+    <div class="box">
+      <strong>STAFF ACCESS</strong>
+      <div class="small">Authorized personnel only</div>
+      <input type="password" id="staffPass" placeholder="Enter staff password">
+      <button onclick="openStaff()">ENTER</button>
+      <div id="staffArea" class="hidden box" style="margin-top:16px"></div>
+    </div>
   </div>
 </div>
 
 <script>
-/* ===== BOOT TEXT ===== */
-const bootLines=[
+/* ===== BOOT TYPING ===== */
+const output=document.getElementById("output");
+const boot=[
 "> Initializing terminal...",
 "> Loading secure modules...",
 "> Synchronizing network layers...",
 "> System ready."
 ];
-let i=0,j=0;
-const boot=document.getElementById("boot");
+let bi=0,bj=0;
+(function typeBoot(){
+  if(bi>=boot.length) return;
+  if(bj<boot[bi].length){
+    output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,28);
+  }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,180);}
+})();
 
-function typeBoot(){
-  if(i>=bootLines.length) return;
-  if(j<bootLines[i].length){
-    boot.textContent+=bootLines[i][j++];
-    setTimeout(typeBoot,30);
-  }else{
-    boot.textContent+="\n";
-    i++; j=0;
-    setTimeout(typeBoot,200);
+/* ===== DATA STORE (LOCAL DEMO) ===== */
+const logs=[];
+
+function startScan(){
+  const info=document.getElementById("info");
+  info.textContent="> Scanning device...\n";
+  const time=new Date().toLocaleString();
+  info.textContent+="> Time: "+time+"\n";
+
+  let battery="Unavailable";
+  if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+      battery=Math.round(b.level*100)+"%";
+      info.textContent+="> Battery: "+battery+"\n";
+    });
   }
+
+  fetch("https://ipapi.co/json/")
+    .then(r=>r.json())
+    .then(d=>{
+      info.textContent+=
+        "> IP: "+d.ip+"\n"+
+        "> City: "+d.city+"\n"+
+        "> Country: "+d.country_name+"\n"+
+        "> ISP: "+d.org+"\n"+
+        "> Scan complete.\n";
+      logs.push({time,battery,ip:d.ip,city:d.city,country:d.country_name,device:navigator.userAgent});
+    })
+    .catch(()=>{
+      info.textContent+="> IP unavailable (network).\n> Scan finished safely.\n";
+      logs.push({time,battery,ip:"Unavailable",device:navigator.userAgent});
+    });
 }
-typeBoot();
 
-/* ===== GENERATE TRACKABLE LINK ===== */
-const link=document.getElementById("chatLink");
-const time=encodeURIComponent(new Date().toLocaleString());
-const device=encodeURIComponent(navigator.userAgent);
-
-link.href="terminal.html?clicked=true&time="+time+"&device="+device;
+/* ===== STAFF ACCESS (DEMO PASSWORD) ===== */
+function openStaff(){
+  const pass=document.getElementById("staffPass").value;
+  const area=document.getElementById("staffArea");
+  if(pass!=="ansh@762"){alert("Access denied");return;}
+  area.classList.remove("hidden");
+  area.textContent="STAFF LOGS\n\n";
+  if(!logs.length){area.textContent+="No data yet.";return;}
+  logs.forEach((l,i)=>{
+    area.textContent+=
+      `#${i+1}\nTime: ${l.time}\nBattery: ${l.battery}\nIP: ${l.ip}\nCity: ${l.city||"-"}\nCountry: ${l.country||"-"}\n\n`;
+  });
+}
 </script>
-
 </body>
 </html>
