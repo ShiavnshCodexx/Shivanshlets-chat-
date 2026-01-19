@@ -6,25 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "JetBrains Mono", monospace;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"JetBrains Mono",monospace;
 }
-
-body {
-  background: radial-gradient(circle at top, #050505, #000000);
-  color: #00ff9c;
-  height: 100vh;
-  overflow: hidden;
+body{
+  background:radial-gradient(circle at top,#050505,#000);
+  color:#00ff9c;
+  height:100vh;
+  overflow:hidden;
 }
-
-/* Hacker background lines */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
   background:
     repeating-linear-gradient(
       to bottom,
@@ -32,88 +29,89 @@ body::before {
       rgba(0,255,156,0.04) 1px,
       transparent 2px,
       transparent 6px
-    ),
-    linear-gradient(120deg, transparent 40%, rgba(0,255,156,0.03), transparent 60%);
-  pointer-events: none;
-  animation: scan 6s linear infinite;
+    );
+  animation:scan 6s linear infinite;
+  pointer-events:none;
+}
+@keyframes scan{
+  0%{background-position:0 0}
+  100%{background-position:0 400px}
 }
 
-@keyframes scan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 400px; }
+.terminal{
+  height:100%;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
 }
 
-.terminal {
-  width: 100%;
-  height: 100%;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
+.header{
+  text-align:center;
+  font-size:1.4rem;
+  margin-bottom:10px;
 }
 
-.header {
-  font-size: 1.4rem;
-  text-align: center;
-  margin-bottom: 10px;
+.line{
+  height:1px;
+  background:rgba(0,255,156,.3);
+  margin-bottom:15px;
 }
 
-.line {
-  height: 1px;
-  background: rgba(0,255,156,0.3);
-  margin: 10px 0 20px;
+.screen{
+  flex:1;
+  background:rgba(0,0,0,.85);
+  border:1px solid rgba(0,255,156,.4);
+  padding:15px;
+  overflow-y:auto;
+  font-size:.9rem;
 }
 
-.screen {
-  flex: 1;
-  background: rgba(0,0,0,0.85);
-  border: 1px solid rgba(0,255,156,0.4);
-  padding: 15px;
-  overflow-y: auto;
-  font-size: 0.9rem;
+.output{
+  white-space:pre-wrap;
+  line-height:1.5;
 }
 
-.output {
-  white-space: pre-wrap;
-  line-height: 1.5;
+.controls{
+  margin:12px 0;
+  text-align:center;
 }
 
-.button-area {
-  margin-top: 15px;
-  text-align: center;
+button{
+  background:transparent;
+  border:1px solid #00ff9c;
+  color:#00ff9c;
+  padding:10px 24px;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:.3s;
+}
+button:hover{
+  background:#00ff9c;
+  color:#000;
 }
 
-button {
-  background: transparent;
-  border: 1px solid #00ff9c;
-  color: #00ff9c;
-  padding: 10px 22px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: 0.3s;
+.info-box{
+  margin-top:10px;
+  background:rgba(0,0,0,.7);
+  border:1px solid rgba(0,255,156,.4);
+  padding:10px;
+  font-size:.85rem;
+  min-height:70px;
 }
 
-button:hover {
-  background: #00ff9c;
-  color: #000;
+.input-area{
+  display:flex;
+  margin-top:8px;
 }
-
-.input-area {
-  display: flex;
-  margin-top: 10px;
+.input-area span{
+  margin-right:6px;
 }
-
-.input-area span {
-  padding-right: 6px;
-}
-
-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #00ff9c;
-  font-size: 0.9rem;
+input{
+  flex:1;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#00ff9c;
 }
 </style>
 </head>
@@ -125,14 +123,15 @@ input {
   <div class="line"></div>
 
   <div class="screen">
-    <div id="output" class="output">
-> Initializing secure terminal...
-> Encrypted channel ready.
-    </div>
+    <div id="output" class="output"></div>
   </div>
 
-  <div class="button-area">
+  <div class="controls">
     <button onclick="startScan()">Let's Chat</button>
+
+    <div id="info" class="info-box">
+      > Awaiting user interaction...
+    </div>
   </div>
 
   <div class="input-area">
@@ -142,62 +141,85 @@ input {
 </div>
 
 <script>
-const output = document.getElementById("output");
+const output=document.getElementById("output");
+const info=document.getElementById("info");
 
-function log(text) {
-  output.textContent += "\n" + text;
-  output.scrollTop = output.scrollHeight;
+const bootLines=[
+  "Welcome to Shivansh World",
+  "Initializing secure terminal...",
+  "Loading cyber modules...",
+  "Bypassing visual firewalls...",
+  "Encrypting user session...",
+  "Terminal ready."
+];
+
+let lineIndex=0, charIndex=0;
+
+function typeBoot(){
+  if(lineIndex < bootLines.length){
+    if(charIndex < bootLines[lineIndex].length){
+      output.textContent += bootLines[lineIndex][charIndex];
+      charIndex++;
+      setTimeout(typeBoot,40);
+    }else{
+      output.textContent += "\n";
+      lineIndex++;
+      charIndex=0;
+      setTimeout(typeBoot,300);
+    }
+  }
 }
 
-function fakeIP() {
-  return `${rand(45,192)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`;
+window.onload=typeBoot;
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
 }
 
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function fakeIP(){
+  return `${rand(45,190)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`;
 }
 
-function startScan() {
-  const time = new Date().toLocaleString();
-  log("> Access granted...");
-  log("> Time detected: " + time);
+function startScan(){
+  info.textContent="> Scanning device...\n";
 
-  if (navigator.getBattery) {
-    navigator.getBattery().then(battery => {
-      log("> Battery level: " + Math.round(battery.level * 100) + "%");
+  const time=new Date().toLocaleString();
+  info.textContent+=`> Time: ${time}\n`;
+
+  if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+      info.textContent+=`> Battery: ${Math.round(b.level*100)}%\n`;
     });
-  } else {
-    log("> Battery level: unavailable");
+  }else{
+    info.textContent+="> Battery: unavailable\n";
   }
 
-  log("> IP address: " + fakeIP() + " (simulated)");
-  log("> Location trace: encrypted");
-  log("> Terminal ready. Awaiting input...");
+  info.textContent+=`> IP: ${fakeIP()} (simulated)\n`;
+  info.textContent+="> Secure channel established.";
 }
 
-function sendMessage(e) {
-  if (e.key === "Enter") {
-    const val = e.target.value.trim();
-    if (!val) return;
-
-    log("> " + val);
-    e.target.value = "";
-
-    setTimeout(() => {
-      log("AI@Codex: " + aiReply(val));
-    }, 600);
+function sendMessage(e){
+  if(e.key==="Enter"){
+    const val=e.target.value.trim();
+    if(!val) return;
+    output.textContent+=`\n> ${val}`;
+    e.target.value="";
+    setTimeout(()=>{
+      output.textContent+=`\nAI@Codex: ${aiReply()}`;
+      output.scrollTop=output.scrollHeight;
+    },600);
   }
 }
 
-function aiReply(text) {
-  const replies = [
-    "Running deep packet inspection...",
-    "Command acknowledged. Processing...",
-    "Encrypted response generated.",
-    "Access level verified. Continuing...",
-    "System integrity stable."
+function aiReply(){
+  const replies=[
+    "Command accepted. Processing...",
+    "Encrypted response delivered.",
+    "System stable. No threat detected.",
+    "Access verified. Continue.",
+    "Cyber layer synchronized."
   ];
-  return replies[Math.floor(Math.random() * replies.length)];
+  return replies[Math.floor(Math.random()*replies.length)];
 }
 </script>
 
