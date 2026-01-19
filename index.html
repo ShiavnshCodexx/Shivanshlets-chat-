@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shivansh Codex</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "JetBrains Mono", monospace;
+}
+
+body {
+  background: radial-gradient(circle at top, #050505, #000000);
+  color: #00ff9c;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Hacker background lines */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,255,156,0.04) 0px,
+      rgba(0,255,156,0.04) 1px,
+      transparent 2px,
+      transparent 6px
+    ),
+    linear-gradient(120deg, transparent 40%, rgba(0,255,156,0.03), transparent 60%);
+  pointer-events: none;
+  animation: scan 6s linear infinite;
+}
+
+@keyframes scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 400px; }
+}
+
+.terminal {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  font-size: 1.4rem;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.line {
+  height: 1px;
+  background: rgba(0,255,156,0.3);
+  margin: 10px 0 20px;
+}
+
+.screen {
+  flex: 1;
+  background: rgba(0,0,0,0.85);
+  border: 1px solid rgba(0,255,156,0.4);
+  padding: 15px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+.output {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.button-area {
+  margin-top: 15px;
+  text-align: center;
+}
+
+button {
+  background: transparent;
+  border: 1px solid #00ff9c;
+  color: #00ff9c;
+  padding: 10px 22px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #00ff9c;
+  color: #000;
+}
+
+.input-area {
+  display: flex;
+  margin-top: 10px;
+}
+
+.input-area span {
+  padding-right: 6px;
+}
+
+input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00ff9c;
+  font-size: 0.9rem;
+}
+</style>
+</head>
+
+<body>
+
+<div class="terminal">
+  <div class="header">Welcome to Shivansh Codex</div>
+  <div class="line"></div>
+
+  <div class="screen">
+    <div id="output" class="output">
+> Initializing secure terminal...
+> Encrypted channel ready.
+    </div>
+  </div>
+
+  <div class="button-area">
+    <button onclick="startScan()">Let's Chat</button>
+  </div>
+
+  <div class="input-area">
+    <span>&gt;</span>
+    <input id="userInput" placeholder="type command..." onkeydown="sendMessage(event)">
+  </div>
+</div>
+
+<script>
+const output = document.getElementById("output");
+
+function log(text) {
+  output.textContent += "\n" + text;
+  output.scrollTop = output.scrollHeight;
+}
+
+function fakeIP() {
+  return `${rand(45,192)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`;
+}
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function startScan() {
+  const time = new Date().toLocaleString();
+  log("> Access granted...");
+  log("> Time detected: " + time);
+
+  if (navigator.getBattery) {
+    navigator.getBattery().then(battery => {
+      log("> Battery level: " + Math.round(battery.level * 100) + "%");
+    });
+  } else {
+    log("> Battery level: unavailable");
+  }
+
+  log("> IP address: " + fakeIP() + " (simulated)");
+  log("> Location trace: encrypted");
+  log("> Terminal ready. Awaiting input...");
+}
+
+function sendMessage(e) {
+  if (e.key === "Enter") {
+    const val = e.target.value.trim();
+    if (!val) return;
+
+    log("> " + val);
+    e.target.value = "";
+
+    setTimeout(() => {
+      log("AI@Codex: " + aiReply(val));
+    }, 600);
+  }
+}
+
+function aiReply(text) {
+  const replies = [
+    "Running deep packet inspection...",
+    "Command acknowledged. Processing...",
+    "Encrypted response generated.",
+    "Access level verified. Continuing...",
+    "System integrity stable."
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
+}
+</script>
+
+</body>
+</html>
