@@ -6,14 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:"JetBrains Mono",monospace}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"JetBrains Mono", monospace;
+}
 
 body{
-  background:radial-gradient(circle at top,#050505,#000);
+  background:#000;
   color:#00ff9c;
   min-height:100vh;
   overflow-y:auto;
-  overflow-x:hidden;
 }
 
 /* hacker scan lines */
@@ -23,200 +27,155 @@ body::before{
   inset:0;
   background:repeating-linear-gradient(
     to bottom,
-    rgba(0,255,156,.04) 0px,
-    rgba(0,255,156,.04) 1px,
+    rgba(0,255,156,0.04) 0px,
+    rgba(0,255,156,0.04) 1px,
     transparent 2px,
     transparent 6px
   );
-  animation:scan 6s linear infinite;
   pointer-events:none;
-}
-@keyframes scan{
-  0%{background-position:0 0}
-  100%{background-position:0 400px}
 }
 
 .terminal{
-  min-height:100vh;
+  max-width:900px;
+  margin:auto;
   padding:20px;
-  display:flex;
-  flex-direction:column;
 }
 
 .header{
   text-align:center;
-  font-size:1.4rem;
+  font-size:1.6rem;
   margin-bottom:10px;
 }
 
 .line{
   height:1px;
-  background:rgba(0,255,156,.3);
+  background:rgba(0,255,156,0.3);
   margin-bottom:15px;
 }
 
+/* main terminal */
 .screen{
-  background:rgba(0,0,0,.85);
-  border:1px solid rgba(0,255,156,.4);
+  background:rgba(0,0,0,0.85);
+  border:1px solid rgba(0,255,156,0.4);
   padding:15px;
-  font-size:.9rem;
-  line-height:1.5;
+  min-height:220px;
+  overflow-y:auto;
 }
 
 .output{
   white-space:pre-wrap;
+  line-height:1.6;
 }
 
-/* controls */
-.controls{
-  margin:15px 0;
+/* button */
+.button-area{
   text-align:center;
+  margin:15px 0;
 }
 
 button{
   background:transparent;
   border:1px solid #00ff9c;
   color:#00ff9c;
-  padding:10px 26px;
-  letter-spacing:2px;
+  padding:10px 25px;
   cursor:pointer;
+  letter-spacing:2px;
   transition:.3s;
 }
+
 button:hover{
   background:#00ff9c;
   color:#000;
 }
 
+/* info box */
 .info-box{
+  background:rgba(0,0,0,0.9);
+  border:1px solid rgba(0,255,156,0.4);
+  padding:15px;
   margin-top:10px;
-  background:rgba(0,0,0,.7);
-  border:1px solid rgba(0,255,156,.4);
-  padding:10px;
-  font-size:.85rem;
+  min-height:180px;
   white-space:pre-wrap;
-}
-
-/* input */
-.input-area{
-  display:flex;
-  margin-top:10px;
-}
-.input-area span{
-  margin-right:6px;
-}
-input{
-  flex:1;
-  background:transparent;
-  border:none;
-  outline:none;
-  color:#00ff9c;
+  overflow-y:auto;
 }
 </style>
 </head>
 
 <body>
 
-<audio id="typeSound" preload="auto">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-typing-1386.mp3" type="audio/mpeg">
-</audio>
-
 <div class="terminal">
 
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
+  <div class="button-area">
+    <button onclick="startScan()">LET'S CHAT</button>
+  </div>
+
   <div class="screen">
     <div id="output" class="output"></div>
   </div>
 
-  <div class="controls">
-    <button onclick="startScan()">Let's Chat</button>
-    <div id="info" class="info-box">
-> Awaiting user interaction...
-    </div>
-  </div>
-
-  <div class="input-area">
-    <span>&gt;</span>
-    <input id="userInput" placeholder="type command..." onkeydown="sendCommand(event)">
+  <div class="info-box" id="info">
+> Click "LET'S CHAT" to scan device...
   </div>
 
 </div>
 
 <script>
-const output=document.getElementById("output");
-const info=document.getElementById("info");
-const sound=document.getElementById("typeSound");
+const output = document.getElementById("output");
+const info = document.getElementById("info");
 
-/* boot animation */
-const bootLines=[
+/* typing intro */
+const introLines = [
+  "Initializing terminal...",
+  "Loading encrypted modules...",
+  "Establishing secure connection...",
   "Welcome to Shivansh World",
-  "Initializing secure terminal...",
-  "Loading cyber modules...",
-  "Encrypting session...",
-  "System online. Access granted."
+  "System ready."
 ];
 
-let l=0,c=0;
-function boot(){
-  if(l<bootLines.length){
-    if(c<bootLines[l].length){
-      output.textContent+=bootLines[l][c];
-      sound.currentTime=0;
-      sound.play().catch(()=>{});
-      c++;
-      setTimeout(boot,35);
-    }else{
-      output.textContent+="\n";
-      l++; c=0;
-      setTimeout(boot,300);
-    }
+let i=0;
+function typeIntro(){
+  if(i<introLines.length){
+    output.textContent += "> " + introLines[i] + "\n";
+    i++;
+    setTimeout(typeIntro,700);
   }
 }
-window.onload=boot;
+typeIntro();
 
-/* fake data helpers */
-function rand(min,max){
-  return Math.floor(Math.random()*(max-min+1))+min;
-}
-function fakeIP(){
-  return `${rand(45,190)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`;
-}
-
-/* button action */
+/* scan function */
 function startScan(){
   info.textContent="> Scanning device...\n";
   info.textContent+=`> Time: ${new Date().toLocaleString()}\n`;
 
+  /* Battery */
   if(navigator.getBattery){
     navigator.getBattery().then(b=>{
       info.textContent+=`> Battery: ${Math.round(b.level*100)}%\n`;
     });
-  }else{
-    info.textContent+="> Battery: unavailable\n";
+  } else {
+    info.textContent+="> Battery: Not supported\n";
   }
 
-  info.textContent+=`> IP Address: ${fakeIP()} (simulated)\n`;
-  info.textContent+=`> Location: encrypted\n`;
-  info.textContent+="> Secure channel established.";
-}
-
-/* fake terminal reply */
-function sendCommand(e){
-  if(e.key==="Enter"){
-    const val=e.target.value.trim();
-    if(!val) return;
-
-    output.textContent+=`\n> ${val}`;
-    sound.currentTime=0;
-    sound.play().catch(()=>{});
-    e.target.value="";
-
-    setTimeout(()=>{
-      output.textContent+=`\nSystem: command logged.`;
-      window.scrollTo(0,document.body.scrollHeight);
-    },500);
-  }
+  /* REAL IP + LOCATION */
+  fetch("https://ipapi.co/json/")
+    .then(res=>res.json())
+    .then(data=>{
+      info.textContent+=`> IP Address: ${data.ip}\n`;
+      info.textContent+=`> City: ${data.city}\n`;
+      info.textContent+=`> Region: ${data.region}\n`;
+      info.textContent+=`> Country: ${data.country_name}\n`;
+      info.textContent+=`> ISP: ${data.org}\n`;
+      info.textContent+=`> Latitude: ${data.latitude}\n`;
+      info.textContent+=`> Longitude: ${data.longitude}\n`;
+      info.textContent+="> Location type: IP-based (public data)\n";
+      info.textContent+="> Scan completed successfully.";
+    })
+    .catch(()=>{
+      info.textContent+="> Failed to fetch IP data.";
+    });
 }
 </script>
 
