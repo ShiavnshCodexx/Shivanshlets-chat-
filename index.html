@@ -14,52 +14,56 @@
 }
 
 body{
-  background:#000;
+  background:radial-gradient(circle at top,#050505,#000);
   color:#00ff9c;
   min-height:100vh;
   overflow-y:auto;
+  overflow-x:hidden;
 }
 
-/* hacker scan lines */
+/* subtle hacker scan lines */
 body::before{
   content:"";
   position:fixed;
   inset:0;
-  background:repeating-linear-gradient(
-    to bottom,
-    rgba(0,255,156,0.04) 0px,
-    rgba(0,255,156,0.04) 1px,
-    transparent 2px,
-    transparent 6px
-  );
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,255,156,0.04) 0px,
+      rgba(0,255,156,0.04) 1px,
+      transparent 2px,
+      transparent 6px
+    );
   pointer-events:none;
 }
 
 .terminal{
   max-width:900px;
-  margin:auto;
+  margin:0 auto;
   padding:20px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
 }
 
 .header{
   text-align:center;
   font-size:1.6rem;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 
 .line{
   height:1px;
   background:rgba(0,255,156,0.3);
-  margin-bottom:15px;
+  margin-bottom:20px;
 }
 
-/* main terminal */
 .screen{
   background:rgba(0,0,0,0.85);
   border:1px solid rgba(0,255,156,0.4);
   padding:15px;
   min-height:220px;
-  overflow-y:auto;
+  margin-bottom:20px;
 }
 
 .output{
@@ -67,20 +71,19 @@ body::before{
   line-height:1.6;
 }
 
-/* button */
 .button-area{
   text-align:center;
-  margin:15px 0;
+  margin-bottom:20px;
 }
 
 button{
   background:transparent;
   border:1px solid #00ff9c;
   color:#00ff9c;
-  padding:10px 25px;
+  padding:12px 30px;
   cursor:pointer;
   letter-spacing:2px;
-  transition:.3s;
+  transition:0.3s;
 }
 
 button:hover{
@@ -88,15 +91,13 @@ button:hover{
   color:#000;
 }
 
-/* info box */
 .info-box{
-  background:rgba(0,0,0,0.9);
+  background:rgba(0,0,0,0.85);
   border:1px solid rgba(0,255,156,0.4);
   padding:15px;
-  margin-top:10px;
   min-height:180px;
   white-space:pre-wrap;
-  overflow-y:auto;
+  line-height:1.6;
 }
 </style>
 </head>
@@ -108,14 +109,17 @@ button:hover{
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
-  <div class="button-area">
-    <button onclick="startScan()">LET'S CHAT</button>
-  </div>
-
+  <!-- TERMINAL OUTPUT -->
   <div class="screen">
     <div id="output" class="output"></div>
   </div>
 
+  <!-- BUTTON NEECHHE -->
+  <div class="button-area">
+    <button onclick="startScan()">LET'S CHAT</button>
+  </div>
+
+  <!-- SCAN RESULT BOX -->
   <div class="info-box" id="info">
 > Click "LET'S CHAT" to scan device...
   </div>
@@ -124,57 +128,63 @@ button:hover{
 
 <script>
 const output = document.getElementById("output");
-const info = document.getElementById("info");
+const info   = document.getElementById("info");
 
-/* typing intro */
-const introLines = [
-  "Initializing terminal...",
-  "Loading encrypted modules...",
-  "Establishing secure connection...",
-  "Welcome to Shivansh World",
-  "System ready."
+/* typing effect */
+const bootLines = [
+  "> Initializing terminal...",
+  "> Loading encrypted modules...",
+  "> Establishing secure connection...",
+  "> Welcome to Shivansh World",
+  "> System ready."
 ];
 
-let i=0;
-function typeIntro(){
-  if(i<introLines.length){
-    output.textContent += "> " + introLines[i] + "\n";
-    i++;
-    setTimeout(typeIntro,700);
+let lineIndex = 0;
+let charIndex = 0;
+
+function typeBoot(){
+  if(lineIndex >= bootLines.length) return;
+
+  if(charIndex < bootLines[lineIndex].length){
+    output.textContent += bootLines[lineIndex][charIndex];
+    charIndex++;
+    setTimeout(typeBoot, 35);
+  } else {
+    output.textContent += "\n";
+    lineIndex++;
+    charIndex = 0;
+    setTimeout(typeBoot, 300);
   }
 }
-typeIntro();
 
-/* scan function */
+typeBoot();
+
+/* scan button */
 function startScan(){
-  info.textContent="> Scanning device...\n";
-  info.textContent+=`> Time: ${new Date().toLocaleString()}\n`;
+  info.textContent = "> Scanning device...\n";
+  info.textContent += "> Time: " + new Date().toLocaleString() + "\n";
 
-  /* Battery */
   if(navigator.getBattery){
     navigator.getBattery().then(b=>{
-      info.textContent+=`> Battery: ${Math.round(b.level*100)}%\n`;
+      info.textContent += "> Battery: " + Math.round(b.level*100) + "%\n";
     });
   } else {
-    info.textContent+="> Battery: Not supported\n";
+    info.textContent += "> Battery: unavailable\n";
   }
 
-  /* REAL IP + LOCATION */
   fetch("https://ipapi.co/json/")
-    .then(res=>res.json())
-    .then(data=>{
-      info.textContent+=`> IP Address: ${data.ip}\n`;
-      info.textContent+=`> City: ${data.city}\n`;
-      info.textContent+=`> Region: ${data.region}\n`;
-      info.textContent+=`> Country: ${data.country_name}\n`;
-      info.textContent+=`> ISP: ${data.org}\n`;
-      info.textContent+=`> Latitude: ${data.latitude}\n`;
-      info.textContent+=`> Longitude: ${data.longitude}\n`;
-      info.textContent+="> Location type: IP-based (public data)\n";
-      info.textContent+="> Scan completed successfully.";
+    .then(res => res.json())
+    .then(data => {
+      info.textContent += "> IP Address: " + data.ip + "\n";
+      info.textContent += "> City: " + data.city + "\n";
+      info.textContent += "> Region: " + data.region + "\n";
+      info.textContent += "> Country: " + data.country_name + "\n";
+      info.textContent += "> ISP: " + data.org + "\n";
+      info.textContent += "> Location source: IP-based (public data)\n";
+      info.textContent += "> Scan complete.";
     })
     .catch(()=>{
-      info.textContent+="> Failed to fetch IP data.";
+      info.textContent += "> Unable to fetch IP data.";
     });
 }
 </script>
