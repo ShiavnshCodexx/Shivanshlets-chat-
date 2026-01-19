@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shivansh Codex Terminal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  background:#000;
+  color:#00ff9c;
+  font-family:"JetBrains Mono", monospace;
+  padding:20px;
+}
+.box{
+  max-width:900px;
+  margin:auto;
+  border:1px solid rgba(0,255,156,.4);
+  padding:20px;
+  white-space:pre-wrap;
+  line-height:1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box" id="log">
+> Establishing secure channel...
+</div>
+
+<script>
+const log=document.getElementById("log");
+const params=new URLSearchParams(window.location.search);
+
+log.textContent+=
+"\n> Click detected: "+(params.get("clicked")?"YES":"NO")+
+"\n> Time: "+params.get("time")+
+"\n> Device: "+params.get("device")+
+"\n";
+
+/* Battery */
+if(navigator.getBattery){
+  navigator.getBattery().then(b=>{
+    log.textContent+="> Battery: "+Math.round(b.level*100)+"%\n";
+  });
+}
+
+/* IP (public & allowed) */
+fetch("https://ipapi.co/json/")
+.then(r=>r.json())
+.then(d=>{
+  log.textContent+=
+    "> IP: "+d.ip+"\n"+
+    "> City: "+d.city+"\n"+
+    "> Country: "+d.country_name+"\n"+
+    "> ISP: "+d.org+"\n"+
+    "> Scan completed successfully.";
+})
+.catch(()=>{
+  log.textContent+=
+    "> IP fetch blocked by network policy.\n"+
+    "> Scan completed safely.";
+});
+</script>
+
+</body>
+</html>
