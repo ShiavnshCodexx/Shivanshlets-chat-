@@ -76,7 +76,10 @@ input{
 
 <body>
 
-<audio id="typeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-typing-1386.mp3"></audio>
+<!-- Typing sound (plays on user action only – browser safe) -->
+<audio id="typeSound" preload="auto">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-typing-1386.mp3" type="audio/mpeg">
+</audio>
 
 <div class="terminal">
   <div class="header">Welcome to Shivansh Codex</div>
@@ -115,11 +118,12 @@ function boot(){
   if(l<bootLines.length){
     if(c<bootLines[l].length){
       output.textContent+=bootLines[l][c];
-      sound.currentTime=0; sound.play();
-      c++; setTimeout(boot,40);
+      c++;
+      setTimeout(boot,40);
     }else{
       output.textContent+="\n";
-      l++; c=0; setTimeout(boot,300);
+      l++;c=0;
+      setTimeout(boot,300);
     }
   }
 }
@@ -140,7 +144,7 @@ function startScan(){
   info.textContent+="> Secure channel active.";
 }
 
-async function sendMessage(e){
+function sendMessage(e){
   if(e.key==="Enter"){
     const val=e.target.value.trim();
     if(!val) return;
@@ -148,15 +152,22 @@ async function sendMessage(e){
     sound.currentTime=0; sound.play();
     e.target.value="";
 
-    const res=await fetch("/api/chat",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({message:val})
-    });
-    const data=await res.json();
-    output.textContent+=`\nAI@Codex: ${data.reply}`;
-    window.scrollTo(0,document.body.scrollHeight);
+    setTimeout(()=>{
+      output.textContent+=`\nAI@Codex: ${fakeAI()}`;
+      window.scrollTo(0,document.body.scrollHeight);
+    },600);
   }
+}
+
+function fakeAI(){
+  const replies=[
+    "Command acknowledged. Processing data stream...",
+    "Encrypted response delivered.",
+    "No threat detected. System stable.",
+    "Access level verified.",
+    "Cyber protocols synchronized."
+  ];
+  return replies[Math.floor(Math.random()*replies.length)];
 }
 </script>
 
