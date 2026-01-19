@@ -7,12 +7,16 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:"JetBrains Mono",monospace}
+
 body{
   background:radial-gradient(circle at top,#050505,#000);
   color:#00ff9c;
   min-height:100vh;
   overflow-y:auto;
+  overflow-x:hidden;
 }
+
+/* hacker scan lines */
 body::before{
   content:"";
   position:fixed;
@@ -27,11 +31,29 @@ body::before{
   animation:scan 6s linear infinite;
   pointer-events:none;
 }
-@keyframes scan{0%{background-position:0 0}100%{background-position:0 400px}}
+@keyframes scan{
+  0%{background-position:0 0}
+  100%{background-position:0 400px}
+}
 
-.terminal{min-height:100vh;padding:20px;display:flex;flex-direction:column}
-.header{text-align:center;font-size:1.4rem;margin-bottom:10px}
-.line{height:1px;background:rgba(0,255,156,.3);margin-bottom:15px}
+.terminal{
+  min-height:100vh;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  text-align:center;
+  font-size:1.4rem;
+  margin-bottom:10px;
+}
+
+.line{
+  height:1px;
+  background:rgba(0,255,156,.3);
+  margin-bottom:15px;
+}
 
 .screen{
   background:rgba(0,0,0,.85);
@@ -40,9 +62,17 @@ body::before{
   font-size:.9rem;
   line-height:1.5;
 }
-.output{white-space:pre-wrap}
 
-.controls{text-align:center;margin:15px 0}
+.output{
+  white-space:pre-wrap;
+}
+
+/* controls */
+.controls{
+  margin:15px 0;
+  text-align:center;
+}
+
 button{
   background:transparent;
   border:1px solid #00ff9c;
@@ -50,8 +80,12 @@ button{
   padding:10px 26px;
   letter-spacing:2px;
   cursor:pointer;
+  transition:.3s;
 }
-button:hover{background:#00ff9c;color:#000}
+button:hover{
+  background:#00ff9c;
+  color:#000;
+}
 
 .info-box{
   margin-top:10px;
@@ -62,8 +96,14 @@ button:hover{background:#00ff9c;color:#000}
   white-space:pre-wrap;
 }
 
-.input-area{display:flex;margin-top:10px}
-.input-area span{margin-right:6px}
+/* input */
+.input-area{
+  display:flex;
+  margin-top:10px;
+}
+.input-area span{
+  margin-right:6px;
+}
 input{
   flex:1;
   background:transparent;
@@ -76,12 +116,12 @@ input{
 
 <body>
 
-<!-- Typing sound (plays on user action only – browser safe) -->
 <audio id="typeSound" preload="auto">
   <source src="https://assets.mixkit.co/sfx/preview/mixkit-keyboard-typing-1386.mp3" type="audio/mpeg">
 </audio>
 
 <div class="terminal">
+
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
@@ -91,13 +131,16 @@ input{
 
   <div class="controls">
     <button onclick="startScan()">Let's Chat</button>
-    <div id="info" class="info-box">> Awaiting user interaction...</div>
+    <div id="info" class="info-box">
+> Awaiting user interaction...
+    </div>
   </div>
 
   <div class="input-area">
     <span>&gt;</span>
-    <input id="userInput" placeholder="type command..." onkeydown="sendMessage(event)">
+    <input id="userInput" placeholder="type command..." onkeydown="sendCommand(event)">
   </div>
+
 </div>
 
 <script>
@@ -105,10 +148,11 @@ const output=document.getElementById("output");
 const info=document.getElementById("info");
 const sound=document.getElementById("typeSound");
 
+/* boot animation */
 const bootLines=[
   "Welcome to Shivansh World",
   "Initializing secure terminal...",
-  "Loading hacking modules...",
+  "Loading cyber modules...",
   "Encrypting session...",
   "System online. Access granted."
 ];
@@ -118,56 +162,61 @@ function boot(){
   if(l<bootLines.length){
     if(c<bootLines[l].length){
       output.textContent+=bootLines[l][c];
+      sound.currentTime=0;
+      sound.play().catch(()=>{});
       c++;
-      setTimeout(boot,40);
+      setTimeout(boot,35);
     }else{
       output.textContent+="\n";
-      l++;c=0;
+      l++; c=0;
       setTimeout(boot,300);
     }
   }
 }
 window.onload=boot;
 
-function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
-function fakeIP(){return `${rand(45,190)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`}
+/* fake data helpers */
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+function fakeIP(){
+  return `${rand(45,190)}.${rand(10,255)}.${rand(0,255)}.${rand(1,254)}`;
+}
 
+/* button action */
 function startScan(){
   info.textContent="> Scanning device...\n";
   info.textContent+=`> Time: ${new Date().toLocaleString()}\n`;
+
   if(navigator.getBattery){
     navigator.getBattery().then(b=>{
       info.textContent+=`> Battery: ${Math.round(b.level*100)}%\n`;
     });
+  }else{
+    info.textContent+="> Battery: unavailable\n";
   }
-  info.textContent+=`> IP: ${fakeIP()} (simulated)\n`;
-  info.textContent+="> Secure channel active.";
+
+  info.textContent+=`> IP Address: ${fakeIP()} (simulated)\n`;
+  info.textContent+=`> Location: encrypted\n`;
+  info.textContent+="> Secure channel established.";
 }
 
-function sendMessage(e){
+/* fake terminal reply */
+function sendCommand(e){
   if(e.key==="Enter"){
     const val=e.target.value.trim();
     if(!val) return;
+
     output.textContent+=`\n> ${val}`;
-    sound.currentTime=0; sound.play();
+    sound.currentTime=0;
+    sound.play().catch(()=>{});
     e.target.value="";
 
     setTimeout(()=>{
-      output.textContent+=`\nAI@Codex: ${fakeAI()}`;
+      output.textContent+=`\nSystem: command logged.`;
       window.scrollTo(0,document.body.scrollHeight);
-    },600);
+    },500);
   }
-}
-
-function fakeAI(){
-  const replies=[
-    "Command acknowledged. Processing data stream...",
-    "Encrypted response delivered.",
-    "No threat detected. System stable.",
-    "Access level verified.",
-    "Cyber protocols synchronized."
-  ];
-  return replies[Math.floor(Math.random()*replies.length)];
 }
 </script>
 
