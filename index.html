@@ -33,7 +33,7 @@ body{
 @keyframes glow{50%{opacity:.6}}
 
 .container{max-width:900px;margin:auto;padding:20px}
-.header{text-align:center;font-size:1.6rem;margin:20px 0}
+.header{text-align:center;font-size:1.8rem;margin:20px 0}
 .line{height:1px;background:rgba(0,255,156,.35);margin:10px 0 20px}
 
 .box{
@@ -43,89 +43,121 @@ body{
 }
 
 .center{text-align:center;margin:18px 0 30px}
+
 button{
   background:transparent;border:1px solid #00ff9c;color:#00ff9c;
-  padding:12px 34px;letter-spacing:2px;cursor:pointer
+  padding:10px 28px;letter-spacing:2px;cursor:pointer
 }
 button:hover{background:#00ff9c;color:#000}
 
-.hidden{display:none}
 input{
   background:#000;border:1px solid rgba(0,255,156,.5);
   color:#00ff9c;padding:10px;width:100%;margin:8px 0
 }
 
-.chat-box{
-  max-height:300px;overflow-y:auto;margin-bottom:10px;
-  border:1px solid rgba(0,255,156,.3);padding:10px
-}
-
-.msg{margin-bottom:6px}
+.hidden{display:none}
 .small{opacity:.7;font-size:.85rem}
+.badge{float:right;font-size:.8rem;opacity:.8}
+
+.chat-box{max-height:260px;overflow-y:auto;margin-bottom:10px}
+.chat-msg{margin-bottom:6px}
+
+.typing{font-size:.8rem;opacity:.7}
 </style>
 </head>
 
 <body>
-
 <div class="bg-grid"></div>
 <div class="bg-scan"></div>
 <div class="bg-glow"></div>
 
 <div class="container">
-
   <div class="header">Welcome to Shivansh Codex</div>
-  <div class="line"></div>
 
   <!-- TERMINAL -->
   <div class="box" id="output"></div>
 
-  <!-- ONLINE USERS -->
-  <div class="small" id="onlineCount">🟢 Online: 0</div>
-  <div class="line"></div>
-
-  <!-- PUBLIC CHAT -->
+  <!-- LOGIN STATUS -->
   <div class="box">
-    <strong>🌐 PUBLIC CHAT</strong>
-    <div class="chat-box" id="publicChat"></div>
-    <input id="publicName" placeholder="Your name">
-    <input id="publicMsg" placeholder="Type message...">
-    <button onclick="sendPublic()">SEND</button>
+    <div id="userStatus">Not logged in</div>
+    <span id="staffBadge" class="badge"></span><br><br>
+    <button onclick="login()">LOGIN</button>
+    <button onclick="logout()">LOGOUT</button>
+    <div id="onlineCount" class="small"></div>
   </div>
 
-  <!-- IP SCAN -->
+  <!-- PUBLIC CHAT -->
+  <div class="line"></div>
+  <div class="box">
+    <strong>PUBLIC CHAT</strong>
+    <div id="publicChatBox" class="chat-box"></div>
+    <div id="typingStatus" class="typing"></div>
+    <input id="publicMsg" placeholder="Type message..."
+      oninput="setTyping(true)"
+      onblur="setTyping(false)">
+    <button onclick="sendPublicMessage(document.getElementById('publicMsg').value)">SEND</button>
+  </div>
+
+  <!-- LETS CHAT / SCAN -->
   <div class="center">
     <button onclick="startScan()">LET'S CHAT</button>
   </div>
 
   <div class="box" id="info">
-> Click "LET'S CHAT" to scan
+> Click "LET'S CHAT" to scan device info
   </div>
 
-  <!-- STAFF -->
+  <!-- STAFF SECTION -->
+  <div class="line"></div>
   <div class="box">
-    <strong>🔒 STAFF ACCESS</strong>
+    <strong>STAFF CHAT</strong>
     <div class="small">Authorized personnel only</div>
-    <input type="password" id="staffPass" placeholder="Enter staff password">
-    <button onclick="openStaff()">ENTER</button>
 
-    <div id="staffArea" class="hidden">
-      <div class="line"></div>
-      <strong>🛡 STAFF CHAT</strong>
-      <div class="chat-box" id="staffChat"></div>
-      <input id="staffName" placeholder="Staff name">
-      <input id="staffMsg" placeholder="Staff message">
-      <button onclick="sendStaff()">SEND</button>
+    <div id="staffChatBox" class="chat-box"></div>
+    <input id="staffMsg" placeholder="Staff message">
+    <button onclick="sendStaffMessage(document.getElementById('staffMsg').value)">SEND</button>
 
-      <div class="line"></div>
-      <strong>📜 VISITOR LOGS</strong>
-      <div class="chat-box" id="ipLogs"></div>
-    </div>
+    <div id="staffLogs" class="hidden"></div>
   </div>
 
 </div>
+
+<!-- TERMINAL ANIMATION -->
+<script>
+const output=document.getElementById("output");
+const boot=[
+"> Initializing terminal...",
+"> Loading secure modules...",
+"> Synchronizing network layers...",
+"> Shivansh Codex Online."
+];
+let bi=0,bj=0;
+(function typeBoot(){
+  if(bi>=boot.length) return;
+  if(bj<boot[bi].length){
+    output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,30);
+  }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,200);}
+})();
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, set, onDisconnect, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+
+import { 
+  getDatabase, 
+  ref, 
+  push, 
+  set, 
+  onValue, 
+  remove, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 /* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
@@ -139,138 +171,214 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
 
-/* ===== DATABASE REFS ===== */
-const publicRef = ref(db, "publicChat");
-const staffRef = ref(db, "staffChat");
-const logsRef = ref(db, "ipLogs");
+let currentUser = null;
+let isStaff = false;
 
-/* ===== TERMINAL TYPING ===== */
-const output = document.getElementById("output");
-const boot = [
-"> Initializing terminal...",
-"> Loading secure modules...",
-"> Connecting to Firebase...",
-"> Shivansh Online."
-];
-let bi=0,bj=0;
-(function typeBoot(){
-  if(bi>=boot.length) return;
-  if(bj<boot[bi].length){
-    output.textContent+=boot[bi][bj++];
-    setTimeout(typeBoot,25);
-  }else{
-    output.textContent+="\n";
-    bi++;bj=0;
-    setTimeout(typeBoot,180);
+/* ===== LOGIN ===== */
+window.login = function () {
+  signInWithPopup(auth, provider)
+    .catch(err => alert("Login error"));
+};
+
+window.logout = function () {
+  if(currentUser){
+    set(ref(db, "online/" + currentUser.uid), null);
   }
-})();
+  signOut(auth);
+};
 
-/* ===== ONLINE USERS ===== */
-const uid = Math.random().toString(36).slice(2);
-const userRef = ref(db,"onlineUsers/"+uid);
-set(userRef,{online:true});
-onDisconnect(userRef).remove();
+/* ===== AUTH STATE ===== */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById("userStatus").textContent = "Logged in: " + user.displayName;
 
-onValue(ref(db,"onlineUsers"), snap=>{
-  const val = snap.val();
-  const count = val ? Object.keys(val).length : 0;
-  document.getElementById("onlineCount").innerText = "🟢 Online: " + count;
+    const staffRef = ref(db, "staff/" + user.uid);
+    onValue(staffRef, snap => {
+      isStaff = snap.exists();
+      document.getElementById("staffBadge").textContent = isStaff ? "STAFF" : "PUBLIC";
+    });
+
+    set(ref(db, "online/" + user.uid), {
+      name: user.displayName,
+      online: true
+    });
+
+  } else {
+    currentUser = null;
+    document.getElementById("userStatus").textContent = "Not logged in";
+    document.getElementById("staffBadge").textContent = "";
+  }
+});
+
+/* ===== ONLINE COUNT ===== */
+const onlineCountEl = document.getElementById("onlineCount");
+onValue(ref(db, "online"), snap => {
+  let c = 0;
+  snap.forEach(() => c++);
+  onlineCountEl.textContent = "Online: " + c;
 });
 
 /* ===== PUBLIC CHAT ===== */
-window.sendPublic = function(){
-  const name = document.getElementById("publicName").value || "Guest";
-  const msg = document.getElementById("publicMsg").value;
-  if(!msg) return;
-  push(publicRef,{name,msg,time:Date.now()});
+window.sendPublicMessage = function(msg){
+  if(!currentUser) return alert("Login first");
+  if(!msg.trim()) return;
+
+  push(ref(db,"publicChat"), {
+    name: currentUser.displayName,
+    text: msg,
+    time: serverTimestamp()
+  });
+
   document.getElementById("publicMsg").value="";
 };
 
-onChildAdded(publicRef, snap=>{
-  const d = snap.val();
-  const box = document.getElementById("publicChat");
-  const div = document.createElement("div");
-  div.className="msg";
-  div.innerHTML = `<b>${d.name}:</b> ${d.msg}`;
-  box.appendChild(div);
+onValue(ref(db,"publicChat"), snap => {
+  const box = document.getElementById("publicChatBox");
+  box.innerHTML="";
+  snap.forEach(child=>{
+    const m = child.val();
+    const div = document.createElement("div");
+    div.className="chat-msg";
+    div.textContent = m.name + ": " + m.text;
+    box.appendChild(div);
+  });
   box.scrollTop = box.scrollHeight;
 });
 
 /* ===== STAFF CHAT ===== */
-window.sendStaff = function(){
-  const name = document.getElementById("staffName").value || "Staff";
-  const msg = document.getElementById("staffMsg").value;
-  if(!msg) return;
-  push(staffRef,{name,msg,time:Date.now()});
+window.sendStaffMessage = function(msg){
+  if(!currentUser || !isStaff) return alert("Staff only");
+  if(!msg.trim()) return;
+
+  push(ref(db,"staffChat"), {
+    name: currentUser.displayName,
+    text: msg,
+    time: serverTimestamp()
+  });
+
   document.getElementById("staffMsg").value="";
 };
 
-onChildAdded(staffRef, snap=>{
-  const d = snap.val();
-  const box = document.getElementById("staffChat");
-  const div = document.createElement("div");
-  div.className="msg";
-  div.innerHTML = `<b>${d.name}:</b> ${d.msg}`;
-  box.appendChild(div);
+onValue(ref(db,"staffChat"), snap => {
+  const box = document.getElementById("staffChatBox");
+  box.innerHTML="";
+  snap.forEach(child=>{
+    const m = child.val();
+    const div = document.createElement("div");
+    div.className="chat-msg";
+    div.textContent = "[STAFF] " + m.name + ": " + m.text;
+    box.appendChild(div);
+  });
   box.scrollTop = box.scrollHeight;
 });
 
-/* ===== STAFF LOGIN ===== */
-window.openStaff = function(){
-  const pass = document.getElementById("staffPass").value;
-  if(pass !== "code@100"){ alert("Access denied"); return; }
-  document.getElementById("staffArea").classList.remove("hidden");
+/* ===== TYPING INDICATOR ===== */
+window.setTyping = function(state){
+  if(!currentUser) return;
+  const tRef = ref(db,"typing/" + currentUser.uid);
+  if(state){
+    set(tRef, { name: currentUser.displayName });
+  } else {
+    remove(tRef);
+  }
 };
 
-/* ===== IP SCAN + SAVE ===== */
+onValue(ref(db,"typing"), snap => {
+  const names=[];
+  snap.forEach(c=>names.push(c.val().name));
+  document.getElementById("typingStatus").textContent =
+    names.length ? names.join(", ")+" typing..." : "";
+});
+
+</script>
+<script type="module">
+import { ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+/* ===== CONSENT POPUP ===== */
 window.startScan = function(){
+  const agree = confirm(
+    "This site collects your IP & battery info for a school project demo.\nDo you agree?"
+  );
+  if(!agree){
+    document.getElementById("info").textContent = "> Permission denied.";
+    return;
+  }
+
+  scanDevice();
+};
+
+/* ===== SCAN FUNCTION ===== */
+function scanDevice(){
   const info=document.getElementById("info");
   info.textContent="> Scanning device...\n";
-  const time=new Date().toLocaleString();
 
+  const time = new Date().toLocaleString();
+  info.textContent += "> Time: " + time + "\n";
+
+  // Battery
+  if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+      const battery = Math.round(b.level * 100);
+      const charging = b.charging ? "Yes" : "No";
+      info.textContent += `> Battery: ${battery}%\n`;
+      info.textContent += `> Charging: ${charging}\n`;
+
+      saveLog({ battery, charging, time });
+    });
+  }
+
+  // IP
   fetch("https://ipapi.co/json/")
     .then(r=>r.json())
     .then(d=>{
-      const logData = {
-        time,
+      info.textContent += "> IP: " + d.ip + "\n";
+      info.textContent += "> City: " + d.city + "\n";
+      info.textContent += "> Country: " + d.country_name + "\n";
+
+      saveLog({
         ip: d.ip,
         city: d.city,
         country: d.country_name,
-        isp: d.org,
-        device: navigator.userAgent
-      };
-
-      info.textContent +=
-        "> IP: "+d.ip+"\n"+
-        "> City: "+d.city+"\n"+
-        "> Country: "+d.country_name+"\n"+
-        "> ISP: "+d.org+"\n"+
-        "> I see You.\n";
-
-      push(logsRef, logData);
+        time
+      });
     })
     .catch(()=>{
-      info.textContent+="> Network error.\n";
+      info.textContent += "> IP fetch blocked\n";
     });
-};
+}
 
-/* ===== SHOW IP LOGS IN STAFF ===== */
-onChildAdded(logsRef, snap=>{
-  const d = snap.val();
-  const box = document.getElementById("ipLogs");
-  const div = document.createElement("div");
-  div.className="msg";
-  div.innerHTML =
-    `<b>${d.time}</b><br>
-     IP: ${d.ip}<br>
-     City: ${d.city}<br>
-     Country: ${d.country}<br>
-     ISP: ${d.isp}<br>
-     <span class="small">${d.device}</span><hr>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+/* ===== SAVE TO FIREBASE ===== */
+function saveLog(data){
+  if(!currentUser) return;
+  push(ref(db,"visitorLogs"), {
+    name: currentUser.displayName,
+    uid: currentUser.uid,
+    ...data
+  });
+}
+
+/* ===== STAFF LOG VIEWER ===== */
+const staffLogsBox = document.getElementById("staffLogs");
+
+onValue(ref(db,"visitorLogs"), snap=>{
+  if(!isStaff) return;
+
+  staffLogsBox.classList.remove("hidden");
+  staffLogsBox.innerHTML="<h3>Visitor Logs</h3>";
+
+  snap.forEach(c=>{
+    const d = c.val();
+    const div = document.createElement("div");
+    div.className="chat-msg";
+    div.textContent =
+      `[${d.time}] ${d.name} | IP: ${d.ip || "-"} | Battery: ${d.battery || "-"}% | Charging: ${d.charging || "-"}`;
+    staffLogsBox.appendChild(div);
+  });
 });
 </script>
 
