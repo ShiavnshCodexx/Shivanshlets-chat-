@@ -11,6 +11,7 @@ body{
   background:#000;color:#00ff9c;min-height:100vh;overflow-y:auto;
 }
 
+/* BACKGROUND */
 .bg-scan,.bg-grid,.bg-glow{position:fixed;inset:0;pointer-events:none}
 .bg-scan{
   background:repeating-linear-gradient(
@@ -60,16 +61,73 @@ input{
 }
 
 .msg{margin-bottom:6px}
-.me{color:#00ff9c}
-.other{color:#0ff}
-
 .small{opacity:.7;font-size:.85rem}
 </style>
 </head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-scan"></div>
+<div class="bg-glow"></div>
+
+<div class="container">
+
+  <div class="header">Welcome to Shivansh Codex</div>
+  <div class="line"></div>
+
+  <!-- TERMINAL -->
+  <div class="box" id="output"></div>
+
+  <!-- ONLINE USERS -->
+  <div class="small" id="onlineCount">🟢 Online: 0</div>
+  <div class="line"></div>
+
+  <!-- PUBLIC CHAT -->
+  <div class="box">
+    <strong>🌐 PUBLIC CHAT</strong>
+    <div class="chat-box" id="publicChat"></div>
+    <input id="publicName" placeholder="Your name">
+    <input id="publicMsg" placeholder="Type message...">
+    <button onclick="sendPublic()">SEND</button>
+  </div>
+
+  <!-- IP SCAN -->
+  <div class="center">
+    <button onclick="startScan()">LET'S CHAT</button>
+  </div>
+
+  <div class="box" id="info">
+> Click "LET'S CHAT" to scan
+  </div>
+
+  <!-- STAFF -->
+  <div class="box">
+    <strong>🔒 STAFF ACCESS</strong>
+    <div class="small">Authorized personnel only</div>
+    <input type="password" id="staffPass" placeholder="Enter staff password">
+    <button onclick="openStaff()">ENTER</button>
+
+    <div id="staffArea" class="hidden">
+      <div class="line"></div>
+      <strong>🛡 STAFF CHAT</strong>
+      <div class="chat-box" id="staffChat"></div>
+      <input id="staffName" placeholder="Staff name">
+      <input id="staffMsg" placeholder="Staff message">
+      <button onclick="sendStaff()">SEND</button>
+
+      <div class="line"></div>
+      <strong>📜 VISITOR LOGS</strong>
+      <div class="chat-box" id="ipLogs"></div>
+    </div>
+  </div>
+
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, set, onDisconnect, onValue } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
   authDomain: "shivansh-codex-chat.firebaseapp.com",
@@ -83,24 +141,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+/* ===== DATABASE REFS ===== */
 const publicRef = ref(db, "publicChat");
 const staffRef = ref(db, "staffChat");
+const logsRef = ref(db, "ipLogs");
 
 /* ===== TERMINAL TYPING ===== */
-const output=document.getElementById("output");
-const boot=[
+const output = document.getElementById("output");
+const boot = [
 "> Initializing terminal...",
 "> Loading secure modules...",
 "> Connecting to Firebase...",
-"> Shivansh Online."
+"> System Online."
 ];
 let bi=0,bj=0;
 (function typeBoot(){
   if(bi>=boot.length) return;
   if(bj<boot[bi].length){
-    output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,30);
-  }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,200);}
+    output.textContent+=boot[bi][bj++];
+    setTimeout(typeBoot,25);
+  }else{
+    output.textContent+="\n";
+    bi++;bj=0;
+    setTimeout(typeBoot,180);
+  }
 })();
+
+/* ===== ONLINE USERS ===== */
+const uid = Math.random().toString(36).slice(2);
+const userRef = ref(db,"onlineUsers/"+uid);
+set(userRef,{online:true});
+onDisconnect(userRef).remove();
+
+onValue(ref(db,"onlineUsers"), snap=>{
+  const val = snap.val();
+  const count = val ? Object.keys(val).length : 0;
+  document.getElementById("onlineCount").innerText = "🟢 Online: " + count;
+});
 
 /* ===== PUBLIC CHAT ===== */
 window.sendPublic = function(){
@@ -147,113 +224,55 @@ window.openStaff = function(){
   document.getElementById("staffArea").classList.remove("hidden");
 };
 
-/* ===== IP SCAN ===== */
+/* ===== IP SCAN + SAVE ===== */
 window.startScan = function(){
   const info=document.getElementById("info");
   info.textContent="> Scanning device...\n";
   const time=new Date().toLocaleString();
-  info.textContent+="> Time: "+time+"\n";
 
   fetch("https://ipapi.co/json/")
     .then(r=>r.json())
     .then(d=>{
-      info.textContent+=
+      const logData = {
+        time,
+        ip: d.ip,
+        city: d.city,
+        country: d.country_name,
+        isp: d.org,
+        device: navigator.userAgent
+      };
+
+      info.textContent +=
         "> IP: "+d.ip+"\n"+
         "> City: "+d.city+"\n"+
         "> Country: "+d.country_name+"\n"+
         "> ISP: "+d.org+"\n"+
-        "> Scan complete.\n";
+        "> Scan saved.\n";
+
+      push(logsRef, logData);
     })
     .catch(()=>{
       info.textContent+="> Network error.\n";
     });
-}
-</script>
-<script type="module">
-import { ref, set, onDisconnect, onValue, update } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
-import { db } from "./"; // ignore if error, same module me already hai
-
-const uid = Math.random().toString(36).slice(2);
-const userRef = ref(db, "onlineUsers/" + uid);
-
-/* ===== ONLINE STATUS ===== */
-set(userRef, { online: true });
-onDisconnect(userRef).remove();
-
-const onlineBox = document.createElement("div");
-onlineBox.className = "small";
-onlineBox.innerText = "Online: 0";
-document.querySelector(".container").prepend(onlineBox);
-
-onValue(ref(db,"onlineUsers"), snap=>{
-  const val = snap.val();
-  const count = val ? Object.keys(val).length : 0;
-  onlineBox.innerText = "🟢 Online users: " + count;
-});
-
-/* ===== TYPING STATUS ===== */
-let typingTimeout;
-
-window.setTyping = function(type){
-  const typingRef = ref(db, "typing/" + uid);
-  set(typingRef, { typing: true, type });
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(()=>{
-    set(typingRef, { typing: false, type });
-  },1000);
 };
 
-/* ===== SEEN / DELIVERED ===== */
-function markSeen(chatType, msgId){
-  const seenRef = ref(db, chatType + "/" + msgId + "/seen");
-  set(seenRef, true);
-}
+/* ===== SHOW IP LOGS IN STAFF ===== */
+onChildAdded(logsRef, snap=>{
+  const d = snap.val();
+  const box = document.getElementById("ipLogs");
+  const div = document.createElement("div");
+  div.className="msg";
+  div.innerHTML =
+    `<b>${d.time}</b><br>
+     IP: ${d.ip}<br>
+     City: ${d.city}<br>
+     Country: ${d.country}<br>
+     ISP: ${d.isp}<br>
+     <span class="small">${d.device}</span><hr>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+});
 </script>
 
-<body>
-<div class="bg-grid"></div>
-<div class="bg-scan"></div>
-<div class="bg-glow"></div>
-
-<div class="container">
-  <div class="header">Welcome to Shivansh Codex</div>
-  <div class="line"></div>
-
-  <!-- TERMINAL -->
-  <div class="box" id="output"></div>
-
-  <!-- PUBLIC CHAT -->
-  <div class="box">
-    <strong>🌐 PUBLIC CHAT</strong>
-    <div class="chat-box" id="publicChat"></div>
-    <input id="publicName" placeholder="Your name">
-    <input id="publicMsg" placeholder="Type message...">
-    <button onclick="sendPublic()">SEND</button>
-  </div>
-
-  <!-- IP SCAN -->
-  <div class="center">
-    <button onclick="startScan()">LET'S CHAT</button>
-  </div>
-
-  <div class="box" id="info">
-> Click "LET'S CHAT" Shivansh is waiting for reply 
-  </div>
-
-  <!-- STAFF -->
-  <div class="box">
-    <strong>STAFF ACCESS</strong>
-    <div class="small">Authorized personnel only</div>
-    <input type="password" id="staffPass" placeholder="Enter staff password">
-    <button onclick="openStaff()">ENTER</button>
-
-    <div id="staffArea" class="hidden">
-      <div class="chat-box" id="staffChat"></div>
-      <input id="staffName" placeholder="Staff name">
-      <input id="staffMsg" placeholder="Staff message">
-      <button onclick="sendStaff()">SEND</button>
-    </div>
-  </div>
-
-</div>
+</body>
+</html>
