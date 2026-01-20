@@ -11,7 +11,6 @@ body{
   background:#000;color:#00ff9c;min-height:100vh;overflow-y:auto;
 }
 
-/* ===== LIVE BACKGROUND (3 LAYERS) ===== */
 .bg-scan,.bg-grid,.bg-glow{position:fixed;inset:0;pointer-events:none}
 .bg-scan{
   background:repeating-linear-gradient(
@@ -56,6 +55,14 @@ input{
 }
 .staff-box{margin-top:40px}
 .small{opacity:.7;font-size:.85rem}
+
+#messages{
+  height:200px;
+  overflow-y:auto;
+  border:1px solid rgba(0,255,156,.4);
+  padding:10px;
+  margin-bottom:10px;
+}
 </style>
 </head>
 
@@ -68,20 +75,16 @@ input{
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
-  <!-- TERMINAL OUTPUT -->
   <div class="box" id="output"></div>
 
-  <!-- BUTTON WITH GAP -->
   <div class="center">
     <button onclick="startScan()">LET'S CHAT</button>
   </div>
 
-  <!-- SCAN RESULT -->
   <div class="box" id="info">
 > Click "LET'S CHAT" Shivansh is waiting for reply 
   </div>
 
-  <!-- STAFF SECTION -->
   <div class="staff-box">
     <div class="line"></div>
     <div class="box">
@@ -89,13 +92,18 @@ input{
       <div class="small">Authorized personnel only</div>
       <input type="password" id="staffPass" placeholder="Enter staff password">
       <button onclick="openStaff()">ENTER</button>
-      <div id="staffArea" class="hidden box" style="margin-top:16px"></div>
+
+      <div id="staffArea" class="hidden box" style="margin-top:16px">
+        <div id="messages"></div>
+        <input id="username" placeholder="Your name">
+        <input id="msg" placeholder="Type message...">
+        <button id="sendBtn">SEND</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-/* ===== BOOT TYPING ===== */
 const output=document.getElementById("output");
 const boot=[
 "> Initializing terminal...",
@@ -110,54 +118,68 @@ let bi=0,bj=0;
     output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,28);
   }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,180);}
 })();
+</script>
 
-/* ===== DATA STORE (LOCAL DEMO) ===== */
+<script>
 const logs=[];
-
 function startScan(){
   const info=document.getElementById("info");
   info.textContent="> Scanning device...\n";
   const time=new Date().toLocaleString();
   info.textContent+="> Time: "+time+"\n";
-
-  let battery="Unavailable";
-  if(navigator.getBattery){
-    navigator.getBattery().then(b=>{
-      battery=Math.round(b.level*100)+"%";
-      info.textContent+="> Battery: "+battery+"\n";
-    });
-  }
-
-  fetch("https://ipapi.co/json/")
-    .then(r=>r.json())
-    .then(d=>{
-      info.textContent+=
-        "> IP: "+d.ip+"\n"+
-        "> City: "+d.city+"\n"+
-        "> Country: "+d.country_name+"\n"+
-        "> ISP: "+d.org+"\n"+
-        "> I see you.\n";
-      logs.push({time,battery,ip:d.ip,city:d.city,country:d.country_name,device:navigator.userAgent});
-    })
-    .catch(()=>{
-      info.textContent+="> IP unavailable (network).\n> Scan finished safely.\n";
-      logs.push({time,battery,ip:"Unavailable",device:navigator.userAgent});
-    });
 }
+</script>
 
-/* ===== STAFF ACCESS (DEMO PASSWORD) ===== */
+<script>
 function openStaff(){
   const pass=document.getElementById("staffPass").value;
   const area=document.getElementById("staffArea");
   if(pass!=="ansh@762"){alert("Access denied");return;}
   area.classList.remove("hidden");
-  area.textContent="STAFF LOGS\n\n";
-  if(!logs.length){area.textContent+="No data yet.";return;}
-  logs.forEach((l,i)=>{
-    area.textContent+=
-      `#${i+1}\nTime: ${l.time}\nBattery: ${l.battery}\nIP: ${l.ip}\nCity: ${l.city||"-"}\nCountry: ${l.country||"-"}\n\n`;
-  });
 }
 </script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } 
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
+  authDomain: "shivansh-codex-chat.firebaseapp.com",
+  databaseURL: "https://shivansh-codex-chat-default-rtdb.firebaseio.com",
+  projectId: "shivansh-codex-chat",
+  storageBucket: "shivansh-codex-chat.firebasestorage.app",
+  messagingSenderId: "503775406827",
+  appId: "1:503775406827:web:b60495fe496a3d4226acae"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const sendBtn = document.getElementById("sendBtn");
+
+sendBtn.onclick = () => {
+  const user = document.getElementById("username").value || "Anonymous";
+  const msg = document.getElementById("msg").value;
+  if (!msg) return;
+
+  push(ref(db, "chat"), {
+    user: user,
+    text: msg,
+    time: new Date().toLocaleTimeString()
+  });
+
+  document.getElementById("msg").value = "";
+};
+
+onChildAdded(ref(db, "chat"), snap => {
+  const m = snap.val();
+  document.getElementById("messages").innerHTML +=
+    `<div>> <b>${m.user}</b>: ${m.text}
+    <span style="opacity:.5">(${m.time})</span></div>`;
+});
+</script>
+
 </body>
 </html>
