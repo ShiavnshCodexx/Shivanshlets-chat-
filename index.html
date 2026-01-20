@@ -53,18 +53,163 @@ input{
   background:#000;border:1px solid rgba(0,255,156,.5);
   color:#00ff9c;padding:10px;width:100%;margin:8px 0
 }
-.staff-box{margin-top:40px}
-.small{opacity:.7;font-size:.85rem}
 
-#messages{
-  height:200px;
-  overflow-y:auto;
-  border:1px solid rgba(0,255,156,.4);
-  padding:10px;
-  margin-bottom:10px;
+.chat-box{
+  max-height:300px;overflow-y:auto;margin-bottom:10px;
+  border:1px solid rgba(0,255,156,.3);padding:10px
 }
+
+.msg{margin-bottom:6px}
+.me{color:#00ff9c}
+.other{color:#0ff}
+
+.small{opacity:.7;font-size:.85rem}
 </style>
 </head>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
+  authDomain: "shivansh-codex-chat.firebaseapp.com",
+  projectId: "shivansh-codex-chat",
+  storageBucket: "shivansh-codex-chat.firebasestorage.app",
+  messagingSenderId: "503775406827",
+  appId: "1:503775406827:web:b60495fe496a3d4226acae",
+  databaseURL: "https://shivansh-codex-chat-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const publicRef = ref(db, "publicChat");
+const staffRef = ref(db, "staffChat");
+
+/* ===== TERMINAL TYPING ===== */
+const output=document.getElementById("output");
+const boot=[
+"> Initializing terminal...",
+"> Loading secure modules...",
+"> Connecting to Firebase...",
+"> Shivansh Online."
+];
+let bi=0,bj=0;
+(function typeBoot(){
+  if(bi>=boot.length) return;
+  if(bj<boot[bi].length){
+    output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,30);
+  }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,200);}
+})();
+
+/* ===== PUBLIC CHAT ===== */
+window.sendPublic = function(){
+  const name = document.getElementById("publicName").value || "Guest";
+  const msg = document.getElementById("publicMsg").value;
+  if(!msg) return;
+  push(publicRef,{name,msg,time:Date.now()});
+  document.getElementById("publicMsg").value="";
+};
+
+onChildAdded(publicRef, snap=>{
+  const d = snap.val();
+  const box = document.getElementById("publicChat");
+  const div = document.createElement("div");
+  div.className="msg";
+  div.innerHTML = `<b>${d.name}:</b> ${d.msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+});
+
+/* ===== STAFF CHAT ===== */
+window.sendStaff = function(){
+  const name = document.getElementById("staffName").value || "Staff";
+  const msg = document.getElementById("staffMsg").value;
+  if(!msg) return;
+  push(staffRef,{name,msg,time:Date.now()});
+  document.getElementById("staffMsg").value="";
+};
+
+onChildAdded(staffRef, snap=>{
+  const d = snap.val();
+  const box = document.getElementById("staffChat");
+  const div = document.createElement("div");
+  div.className="msg";
+  div.innerHTML = `<b>${d.name}:</b> ${d.msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+});
+
+/* ===== STAFF LOGIN ===== */
+window.openStaff = function(){
+  const pass = document.getElementById("staffPass").value;
+  if(pass !== "code@100"){ alert("Access denied"); return; }
+  document.getElementById("staffArea").classList.remove("hidden");
+};
+
+/* ===== IP SCAN ===== */
+window.startScan = function(){
+  const info=document.getElementById("info");
+  info.textContent="> Scanning device...\n";
+  const time=new Date().toLocaleString();
+  info.textContent+="> Time: "+time+"\n";
+
+  fetch("https://ipapi.co/json/")
+    .then(r=>r.json())
+    .then(d=>{
+      info.textContent+=
+        "> IP: "+d.ip+"\n"+
+        "> City: "+d.city+"\n"+
+        "> Country: "+d.country_name+"\n"+
+        "> ISP: "+d.org+"\n"+
+        "> Scan complete.\n";
+    })
+    .catch(()=>{
+      info.textContent+="> Network error.\n";
+    });
+}
+</script>
+<script type="module">
+import { ref, set, onDisconnect, onValue, update } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { db } from "./"; // ignore if error, same module me already hai
+
+const uid = Math.random().toString(36).slice(2);
+const userRef = ref(db, "onlineUsers/" + uid);
+
+/* ===== ONLINE STATUS ===== */
+set(userRef, { online: true });
+onDisconnect(userRef).remove();
+
+const onlineBox = document.createElement("div");
+onlineBox.className = "small";
+onlineBox.innerText = "Online: 0";
+document.querySelector(".container").prepend(onlineBox);
+
+onValue(ref(db,"onlineUsers"), snap=>{
+  const val = snap.val();
+  const count = val ? Object.keys(val).length : 0;
+  onlineBox.innerText = "🟢 Online users: " + count;
+});
+
+/* ===== TYPING STATUS ===== */
+let typingTimeout;
+
+window.setTyping = function(type){
+  const typingRef = ref(db, "typing/" + uid);
+  set(typingRef, { typing: true, type });
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(()=>{
+    set(typingRef, { typing: false, type });
+  },1000);
+};
+
+/* ===== SEEN / DELIVERED ===== */
+function markSeen(chatType, msgId){
+  const seenRef = ref(db, chatType + "/" + msgId + "/seen");
+  set(seenRef, true);
+}
+</script>
 
 <body>
 <div class="bg-grid"></div>
@@ -75,8 +220,19 @@ input{
   <div class="header">Welcome to Shivansh Codex</div>
   <div class="line"></div>
 
+  <!-- TERMINAL -->
   <div class="box" id="output"></div>
 
+  <!-- PUBLIC CHAT -->
+  <div class="box">
+    <strong>🌐 PUBLIC CHAT</strong>
+    <div class="chat-box" id="publicChat"></div>
+    <input id="publicName" placeholder="Your name">
+    <input id="publicMsg" placeholder="Type message...">
+    <button onclick="sendPublic()">SEND</button>
+  </div>
+
+  <!-- IP SCAN -->
   <div class="center">
     <button onclick="startScan()">LET'S CHAT</button>
   </div>
@@ -85,101 +241,19 @@ input{
 > Click "LET'S CHAT" Shivansh is waiting for reply 
   </div>
 
-  <div class="staff-box">
-    <div class="line"></div>
-    <div class="box">
-      <strong>STAFF ACCESS</strong>
-      <div class="small">Authorized personnel only</div>
-      <input type="password" id="staffPass" placeholder="Enter staff password">
-      <button onclick="openStaff()">ENTER</button>
+  <!-- STAFF -->
+  <div class="box">
+    <strong>STAFF ACCESS</strong>
+    <div class="small">Authorized personnel only</div>
+    <input type="password" id="staffPass" placeholder="Enter staff password">
+    <button onclick="openStaff()">ENTER</button>
 
-      <div id="staffArea" class="hidden box" style="margin-top:16px">
-        <div id="messages"></div>
-        <input id="username" placeholder="Your name">
-        <input id="msg" placeholder="Type message...">
-        <button id="sendBtn">SEND</button>
-      </div>
+    <div id="staffArea" class="hidden">
+      <div class="chat-box" id="staffChat"></div>
+      <input id="staffName" placeholder="Staff name">
+      <input id="staffMsg" placeholder="Staff message">
+      <button onclick="sendStaff()">SEND</button>
     </div>
   </div>
+
 </div>
-
-<script>
-const output=document.getElementById("output");
-const boot=[
-"> Initializing terminal...",
-"> Loading secure modules...",
-"> Synchronizing network layers...",
-"> Shivansh Online."
-];
-let bi=0,bj=0;
-(function typeBoot(){
-  if(bi>=boot.length) return;
-  if(bj<boot[bi].length){
-    output.textContent+=boot[bi][bj++]; setTimeout(typeBoot,28);
-  }else{output.textContent+="\n";bi++;bj=0;setTimeout(typeBoot,180);}
-})();
-</script>
-
-<script>
-const logs=[];
-function startScan(){
-  const info=document.getElementById("info");
-  info.textContent="> Scanning device...\n";
-  const time=new Date().toLocaleString();
-  info.textContent+="> Time: "+time+"\n";
-}
-</script>
-
-<script>
-function openStaff(){
-  const pass=document.getElementById("staffPass").value;
-  const area=document.getElementById("staffArea");
-  if(pass!=="ansh@762"){alert("Access denied");return;}
-  area.classList.remove("hidden");
-}
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } 
-from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
-  authDomain: "shivansh-codex-chat.firebaseapp.com",
-  databaseURL: "https://shivansh-codex-chat-default-rtdb.firebaseio.com",
-  projectId: "shivansh-codex-chat",
-  storageBucket: "shivansh-codex-chat.firebasestorage.app",
-  messagingSenderId: "503775406827",
-  appId: "1:503775406827:web:b60495fe496a3d4226acae"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const sendBtn = document.getElementById("sendBtn");
-
-sendBtn.onclick = () => {
-  const user = document.getElementById("username").value || "Anonymous";
-  const msg = document.getElementById("msg").value;
-  if (!msg) return;
-
-  push(ref(db, "chat"), {
-    user: user,
-    text: msg,
-    time: new Date().toLocaleTimeString()
-  });
-
-  document.getElementById("msg").value = "";
-};
-
-onChildAdded(ref(db, "chat"), snap => {
-  const m = snap.val();
-  document.getElementById("messages").innerHTML +=
-    `<div>> <b>${m.user}</b>: ${m.text}
-    <span style="opacity:.5">(${m.time})</span></div>`;
-});
-</script>
-
-</body>
-</html>
