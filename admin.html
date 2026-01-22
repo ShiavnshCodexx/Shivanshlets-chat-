@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin – ShivanshCodex</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="admin">
+  <div class="users" id="users"></div>
+  <div class="chat">
+    <div id="adminMsgs"></div>
+    <input id="reply">
+    <button onclick="replySend()">SEND</button>
+  </div>
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { ref, onValue, push } from
+"https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+let current=null;
+
+onValue(ref(db,"users"),snap=>{
+  users.innerHTML="";
+  snap.forEach(u=>{
+    let d=document.createElement("div");
+    d.textContent=u.val().username;
+    d.onclick=()=>open(u.key);
+    users.appendChild(d);
+  });
+});
+
+function open(uid){
+  current=uid;
+  onValue(ref(db,"chats/"+uid+"/messages"),s=>{
+    adminMsgs.innerHTML="";
+    s.forEach(m=>{
+      adminMsgs.innerHTML+=`<div>${m.val().from}: ${m.val().text}</div>`;
+    });
+  });
+}
+
+window.replySend=()=>{
+  if(!reply.value) return;
+  push(ref(db,"chats/"+current+"/messages"),{
+    from:"admin",text:reply.value,time:Date.now()
+  });
+  reply.value="";
+};
+</script>
+
+</body>
+</html>
