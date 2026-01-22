@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Shivanshcodex Chat</title>
+
+<style>
+body{margin:0;background:#0b141a;color:#fff}
+.header{
+  background:#111;padding:14px;
+  display:flex;justify-content:space-between;
+}
+.chat{
+  height:calc(100vh - 120px);
+  overflow-y:auto;padding:10px;
+}
+.msg{margin:6px 0}
+.me{text-align:right;color:#00ffcc}
+.bar{
+  position:fixed;bottom:0;width:100%;
+  display:flex;gap:6px;
+  background:#111;padding:8px;
+}
+input{
+  flex:1;padding:12px;border-radius:20px;
+  border:none;font-size:16px;
+}
+button{
+  width:50px;border-radius:50%;
+  background:#00ffcc;border:none;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <b>Shivanshcodex</b>
+  <span onclick="logout()">Logout</span>
+</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="bar">
+  <input id="msg" placeholder="Type message">
+  <button onclick="send()">➤</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+const app = initializeApp({
+ databaseURL:"https://shivanshchat-b66da-default-rtdb.firebaseio.com"
+});
+const db = getDatabase(app);
+
+const user = localStorage.getItem("user");
+if(!user) location.href="index.html";
+
+const chatRef = ref(db,"messages/"+user);
+
+onChildAdded(chatRef,s=>{
+ chat.innerHTML+=`<div class="msg me">${s.val().text}</div>`;
+ chat.scrollTop=chat.scrollHeight;
+});
+
+window.send=()=>{
+ if(!msg.value) return;
+ push(chatRef,{text:msg.value,from:user});
+ msg.value="";
+}
+window.logout=()=>{
+ localStorage.clear();
+ location.href="index.html";
+}
+</script>
+</body>
+</html>
