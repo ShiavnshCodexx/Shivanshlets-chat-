@@ -1,151 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShivanshCodex | Login</title>
-
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ShivanshCodex Chat</title>
 
 <style>
-/* ===== BASIC RESET ===== */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: "JetBrains Mono", monospace;
-}
-
-/* ===== BODY ===== */
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{
-  background:#000;
-  color:#00ff9c;
+  background:#0b0f14;
+  color:#fff;
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-/* ===== BACKGROUND (CLICK SAFE) ===== */
-.bg{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
+/* ===== AUTH BOX ===== */
+.auth-box{
+  width:100%;
+  max-width:380px;
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 30px rgba(0,255,150,.15);
 }
-
-/* ===== CENTER BOX ===== */
-.center-box{
-  position:relative;
-  z-index:5;
-  border:2px solid #00ff9c;
-  padding:25px;
-  width:90%;
-  max-width:360px;
+.auth-box h2{
   text-align:center;
+  margin-bottom:15px;
+  color:#00ff9c;
 }
-
-/* ===== TITLE ===== */
-.center-box h1{
-  margin-bottom:20px;
-  letter-spacing:2px;
-}
-
-/* ===== INPUT ===== */
-.center-box input{
+.auth-box input{
   width:100%;
   padding:12px;
-  margin:10px 0;
-  background:#eaf2ff;
+  margin:8px 0;
   border:none;
+  border-radius:8px;
   outline:none;
-  font-size:15px;
 }
-
-/* ===== BUTTON ===== */
-.center-box button{
+.auth-box button{
   width:100%;
-  padding:14px;
-  margin-top:12px;
-  background:transparent;
-  border:2px solid #00ff9c;
-  color:#00ff9c;
-  font-size:15px;
-  letter-spacing:3px;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#00ff9c;
+  font-weight:bold;
   cursor:pointer;
 }
+.switch{
+  text-align:center;
+  margin-top:12px;
+  font-size:14px;
+  cursor:pointer;
+  color:#9ca3af;
+}
 
-.center-box button.login{
+/* ===== CHAT ===== */
+#chatPage{
+  display:none;
+  width:100%;
+  height:100vh;
+  flex-direction:column;
+}
+.header{
+  padding:12px;
+  background:#020617;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header span{
+  color:#00ff9c;
+  font-weight:bold;
+}
+.header button{
+  background:none;
+  border:none;
+  color:#f87171;
+  font-size:14px;
+}
+.messages{
+  flex:1;
+  padding:15px;
+  overflow-y:auto;
+}
+.msg{
+  background:#1f2933;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+  max-width:75%;
+}
+.me{background:#00ff9c;color:#000;margin-left:auto}
+.input-bar{
+  display:flex;
+  padding:10px;
+  gap:8px;
+  background:#020617;
+}
+.input-bar input{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+.input-bar button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
   background:#00ff9c;
-  color:#000;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<div class="bg"></div>
-
-<div class="center-box">
-  <h1>ShivanshCodex</h1>
-
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-
-  <button type="button" onclick="signup()">SIGN UP</button>
-  <button type="button" class="login" onclick="login()">LOGIN</button>
+<!-- ===== LOGIN ===== -->
+<div class="auth-box" id="loginBox">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Username">
+  <input id="loginPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="switch" onclick="showSignup()">No account? Signup</div>
 </div>
 
-<!-- ================= JS ================= -->
-<script type="module">
+<!-- ===== SIGNUP ===== -->
+<div class="auth-box" id="signupBox" style="display:none">
+  <h2>Signup</h2>
+  <input id="signupUser" placeholder="Username">
+  <input id="signupPass" type="password" placeholder="Password">
+  <button onclick="signup()">Create Account</button>
+  <div class="switch" onclick="showLogin()">Already have account?</div>
+</div>
 
-/* ===== IMPORT FIREBASE ===== */
-import { db } from "./firebase.js";
-import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+<!-- ===== CHAT ===== -->
+<div id="chatPage">
+  <div class="header">
+    <span id="userLabel">🟢 Online</span>
+    <button onclick="logout()">Logout</button>
+  </div>
 
-/* ===== SIGN UP ===== */
-window.signup = function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  <div class="messages" id="messages"></div>
 
-  if(!email || !password){
-    alert("Email aur password daal bhai");
-    return;
-  }
+  <div class="input-bar">
+    <input id="msgInput" placeholder="Type message...">
+    <button onclick="sendMsg()">Send</button>
+  </div>
+</div>
 
-  const userId = email.replace(/[@.]/g,"_");
-
-  set(ref(db,"users/"+userId),{
-    email:email,
-    password:password
-  }).then(()=>{
-    alert("Signup successful ✅");
-  }).catch(err=>{
-    alert(err.message);
-  });
+<script>
+/* ===== PAGE SWITCH ===== */
+function showSignup(){
+  loginBox.style.display="none";
+  signupBox.style.display="block";
+}
+function showLogin(){
+  signupBox.style.display="none";
+  loginBox.style.display="block";
 }
 
-/* ===== LOGIN ===== */
-window.login = function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  const userId = email.replace(/[@.]/g,"_");
-
-  get(ref(db,"users/"+userId)).then(snapshot=>{
-    if(snapshot.exists()){
-      if(snapshot.val().password === password){
-        alert("Login successful 🔥");
-        window.location.href = "chat.html";
-      }else{
-        alert("Password galat hai ❌");
-      }
-    }else{
-      alert("User nahi mila ❌");
-    }
-  });
+/* ===== AUTH ===== */
+function signup(){
+  const u=signupUser.value.trim();
+  const p=signupPass.value.trim();
+  if(!u||!p) return alert("Fill all fields");
+  if(localStorage.getItem("user_"+u)) return alert("User exists");
+  localStorage.setItem("user_"+u,p);
+  alert("Signup successful");
+  showLogin();
 }
 
+function login(){
+  const u=loginUser.value.trim();
+  const p=loginPass.value.trim();
+  const saved=localStorage.getItem("user_"+u);
+  if(saved!==p) return alert("Invalid login");
+  localStorage.setItem("loggedUser",u);
+  openChat();
+}
+
+function logout(){
+  localStorage.removeItem("loggedUser");
+  location.reload();
+}
+
+/* ===== CHAT ===== */
+function openChat(){
+  document.querySelector(".auth-box").style.display="none";
+  chatPage.style.display="flex";
+  userLabel.textContent="🟢 "+localStorage.getItem("loggedUser");
+}
+
+function sendMsg(){
+  const text=msgInput.value.trim();
+  if(!text) return;
+  const div=document.createElement("div");
+  div.className="msg me";
+  div.textContent=text;
+  messages.appendChild(div);
+  msgInput.value="";
+  messages.scrollTop=messages.scrollHeight;
+}
+
+/* ===== AUTO LOGIN ===== */
+if(localStorage.getItem("loggedUser")){
+  openChat();
+}
 </script>
 
 </body>
