@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chat – ShivanshCodex</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">Chat with ShivanshCodex <span id="status">🟢</span></div>
+  <div class="chat-messages" id="msgs"></div>
+  <div class="chat-input">
+    <input id="msg" placeholder="Type message">
+    <button onclick="send()">SEND</button>
+  </div>
+</div>
+
+<audio id="sound"><source src="notify.mp3"></audio>
+
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from
+"https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { ref, push, onChildAdded, set, onDisconnect } from
+"https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+
+let uid;
+
+onAuthStateChanged(auth,u=>{
+  if(!u) location.href="index.html";
+  uid=u.uid;
+
+  const sref=ref(db,"status/"+uid);
+  set(sref,{online:true});
+  onDisconnect(sref).set({online:false,lastSeen:Date.now()});
+
+  onChildAdded(ref(db,"chats/"+uid+"/messages"),snap=>{
+    let d=snap.val();
+    msgs.innerHTML+=`<div class="msg ${d.from}">${d.text}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+    if(d.from==="admin"){
+      sound.play();
+      if(Notification.permission==="granted")
+        new Notification("ShivanshCodex",{body:d.text});
+    }
+  });
+});
+
+window.send=()=>{
+  if(!msg.value) return;
+  push(ref(db,"chats/"+uid+"/messages"),{
+    from:"user",text:msg.value,time:Date.now()
+  });
+  msg.value="";
+};
+
+if(Notification.permission!=="granted")
+  Notification.requestPermission();
+</script>
+
+</body>
+</html>
