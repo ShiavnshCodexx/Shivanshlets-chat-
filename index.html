@@ -6,79 +6,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{box-sizing:border-box;font-family:system-ui,-apple-system}
+*{box-sizing:border-box;font-family:system-ui}
 body{
-  margin:0;background:#0b141a;color:#e9edef;
-  display:flex;justify-content:center;align-items:center;
-  min-height:100vh;
+  margin:0;
+  background:#0b141a;
+  color:#e9edef;
+  display:flex;
+  justify-content:center;
 }
-
-/* LIVE BACKGROUND */
 body::before{
-  content:"";position:fixed;inset:0;
+  content:"";
+  position:fixed;
+  inset:0;
   background:
     radial-gradient(circle at top,#00ff9c22,transparent 60%),
     repeating-linear-gradient(to bottom,#00ff9c11 0 1px,transparent 1px 6px);
-  animation:move 6s linear infinite;
+  animation:bg 6s linear infinite;
   z-index:-1;
 }
-@keyframes move{to{background-position:0 300px}}
+@keyframes bg{to{background-position:0 300px}}
 
 .app{
-  width:100%;max-width:420px;height:100vh;
-  background:#111b21;display:flex;flex-direction:column;
+  width:100%;
+  max-width:420px;
+  min-height:100vh;
+  background:#111b21;
+  display:flex;
+  flex-direction:column;
 }
 
-/* HEADER */
 .header{
-  background:#202c33;padding:14px;
-  text-align:center;font-weight:600;
+  background:#202c33;
+  padding:14px;
+  text-align:center;
+  font-weight:600;
 }
 .header span{color:#00ff9c}
 
-/* AUTH */
-.auth{
-  padding:20px;display:flex;flex-direction:column;gap:12px;
-}
+.box{padding:20px}
 input,button{
-  padding:12px;border-radius:8px;
-  border:none;font-size:15px;
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  font-size:15px;
 }
-input{background:#2a3942;color:#fff}
-button{
-  background:#00ff9c;color:#000;font-weight:600;
-}
+input{background:#2a3942;color:#fff;margin-bottom:10px}
+button{background:#00ff9c;color:#000;font-weight:600}
+
 .link{
-  text-align:center;font-size:14px;
-  opacity:.8;cursor:pointer;
+  text-align:center;
+  margin-top:10px;
+  font-size:14px;
+  opacity:.8;
+  cursor:pointer;
 }
 
-/* CHAT */
-.chat{
-  flex:1;display:none;flex-direction:column;
-}
-.messages{
-  flex:1;padding:12px;overflow-y:auto;
-}
+.chat{flex:1;display:none;flex-direction:column}
+.messages{flex:1;padding:12px;overflow-y:auto}
 .msg{
-  max-width:80%;margin-bottom:8px;
-  padding:10px;border-radius:10px;
+  max-width:80%;
+  margin-bottom:8px;
+  padding:10px;
+  border-radius:10px;
   font-size:14px;
 }
 .me{background:#005c4b;margin-left:auto}
 .other{background:#2a3942}
 
 .inputBar{
-  display:flex;gap:6px;padding:10px;
+  display:flex;
+  gap:6px;
+  padding:10px;
   background:#202c33;
 }
-.inputBar input{flex:1}
-.logout{
-  background:#a33;color:#fff;margin:10px;
-}
+.inputBar input{flex:1;margin:0}
+
 .adminTag{
-  text-align:center;font-size:12px;
+  text-align:center;
+  font-size:12px;
   color:#00ff9c;
+  padding:6px;
+}
+.logout{
+  background:#a33;
+  color:#fff;
+  margin:10px;
 }
 </style>
 </head>
@@ -86,53 +99,42 @@ button{
 <body>
 <div class="app">
 
-  <div class="header">💬 <span>Shivanshcodex</span></div>
+<div class="header">💬 <span>Shivanshcodex</span></div>
 
-  <!-- LOGIN -->
-  <div class="auth" id="loginBox">
-    <input id="lUser" placeholder="Username">
-    <input id="lPass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <div class="link" onclick="showSignup()">Create account</div>
-    <div class="link" onclick="adminLogin()">Admin login</div>
-  </div>
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <input id="lUser" placeholder="Username">
+  <input id="lPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="link" onclick="showSignup()">Create account</div>
+  <div class="link" onclick="adminLogin()">Admin login</div>
+</div>
 
-  <!-- SIGNUP -->
-  <div class="auth" id="signupBox" style="display:none">
-    <input id="sUser" placeholder="Create username">
-    <input id="sPass" type="password" placeholder="Create password">
-    <button onclick="signup()">Create account</button>
-    <div class="link" onclick="showLogin()">Back to login</div>
-  </div>
+<!-- SIGNUP -->
+<div class="box" id="signupBox" style="display:none">
+  <input id="sUser" placeholder="Create username">
+  <input id="sPass" type="password" placeholder="Create password">
+  <button onclick="signup()">Create account</button>
+  <div class="link" onclick="showLogin()">Back to login</div>
+</div>
 
-  <!-- CHAT -->
-  <div class="chat" id="chatBox">
-    <div class="adminTag" id="adminTag"></div>
-    <div class="messages" id="messages"></div>
-    <div class="inputBar">
-      <input id="msgInput" placeholder="Type message…">
-      <button onclick="send()">Send</button>
-    </div>
-    <button class="logout" onclick="logout()">Logout</button>
+<!-- CHAT -->
+<div class="chat" id="chatBox">
+  <div class="adminTag" id="adminTag"></div>
+  <div class="messages" id="messages"></div>
+  <div class="inputBar">
+    <input id="msgInput" placeholder="Type message…">
+    <button onclick="sendMsg()">Send</button>
   </div>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import {
-  getDatabase,
-  ref,
-  push,
-  onChildAdded
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
@@ -146,45 +148,36 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-let currentUser = null;
+let currentUser = "";
 let isAdmin = false;
 
-/* UI helpers */
-const loginBox = document.getElementById("loginBox");
-const signupBox = document.getElementById("signupBox");
-const chatBox = document.getElementById("chatBox");
+window.showSignup=()=>{loginBox.style.display="none";signupBox.style.display="block";}
+window.showLogin=()=>{signupBox.style.display="none";loginBox.style.display="block";}
 
-window.showSignup = ()=>{loginBox.style.display="none";signupBox.style.display="flex";}
-window.showLogin = ()=>{signupBox.style.display="none";loginBox.style.display="flex";}
-
-window.signup = ()=>{
-  const u=sUser.value.trim(), p=sPass.value;
+window.signup=()=>{
+  const u=sUser.value.trim(),p=sPass.value;
   if(!u||!p)return alert("Fill all");
-  createUserWithEmailAndPassword(auth, u+"@shivansh.chat", p);
+  createUserWithEmailAndPassword(auth, u+"@user.shivansh", p);
 };
 
-window.login = ()=>{
-  const u=lUser.value.trim(), p=lPass.value;
-  signInWithEmailAndPassword(auth, u+"@shivansh.chat", p);
+window.login=()=>{
+  signInWithEmailAndPassword(auth, lUser.value+"@user.shivansh", lPass.value);
 };
 
-window.adminLogin = ()=>{
-  signInWithEmailAndPassword(auth,"shiavnsh@62718@shivansh.chat","chrome@7282");
+window.adminLogin=()=>{
+  signInWithEmailAndPassword(auth, "admin@shivanshcodex.com", "chrome@7282");
 };
 
 onAuthStateChanged(auth,user=>{
   if(!user)return;
-  currentUser=user.email.split("@")[0];
-  isAdmin=user.email.startsWith("shiavnsh@62718");
   loginBox.style.display=signupBox.style.display="none";
   chatBox.style.display="flex";
-  adminTag.innerText=isAdmin?"🛡 ADMIN MODE":"";
-  loadChat();
-});
 
-function loadChat(){
-  const mRef=ref(db,"chat");
-  onChildAdded(mRef,snap=>{
+  isAdmin=user.email==="admin@shivanshcodex.com";
+  currentUser=isAdmin?"ADMIN":user.email.split("@")[0];
+  adminTag.textContent=isAdmin?"🛡 ADMIN MODE":"";
+
+  onChildAdded(ref(db,"messages"),snap=>{
     const d=snap.val();
     const div=document.createElement("div");
     div.className="msg "+(d.user===currentUser?"me":"other");
@@ -192,12 +185,11 @@ function loadChat(){
     messages.appendChild(div);
     messages.scrollTop=999999;
   });
-}
+});
 
-window.send=()=>{
-  const text=msgInput.value.trim();
-  if(!text)return;
-  push(ref(db,"chat"),{user:currentUser,text});
+window.sendMsg=()=>{
+  if(!msgInput.value)return;
+  push(ref(db,"messages"),{user:currentUser,text:msgInput.value});
   msgInput.value="";
 };
 
