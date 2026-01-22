@@ -1,68 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShivanshCodex</title>
+<title>ShivanshCodex | Login</title>
+
 <link rel="stylesheet" href="style.css">
+
+<style>
+/* ===== BASIC RESET ===== */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ===== BODY ===== */
+body{
+  background:#000;
+  color:#00ff9c;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ===== BACKGROUND (CLICK SAFE) ===== */
+.bg{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ===== CENTER BOX ===== */
+.center-box{
+  position:relative;
+  z-index:5;
+  border:2px solid #00ff9c;
+  padding:25px;
+  width:90%;
+  max-width:360px;
+  text-align:center;
+}
+
+/* ===== TITLE ===== */
+.center-box h1{
+  margin-bottom:20px;
+  letter-spacing:2px;
+}
+
+/* ===== INPUT ===== */
+.center-box input{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  background:#eaf2ff;
+  border:none;
+  outline:none;
+  font-size:15px;
+}
+
+/* ===== BUTTON ===== */
+.center-box button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  background:transparent;
+  border:2px solid #00ff9c;
+  color:#00ff9c;
+  font-size:15px;
+  letter-spacing:3px;
+  cursor:pointer;
+}
+
+.center-box button.login{
+  background:#00ff9c;
+  color:#000;
+}
+</style>
 </head>
+
 <body>
 
+<div class="bg"></div>
+
 <div class="center-box">
-  <h2>ShivanshCodex</h2>
+  <h1>ShivanshCodex</h1>
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
 
-  <button id="signup">SIGN UP</button>
-  <button id="login">LOGIN</button>
-
-  <p id="msg"></p>
+  <button type="button" onclick="signup()">SIGN UP</button>
+  <button type="button" class="login" onclick="login()">LOGIN</button>
 </div>
 
+<!-- ================= JS ================= -->
 <script type="module">
+
+/* ===== IMPORT FIREBASE ===== */
 import { db } from "./firebase.js";
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const u = document.getElementById("username");
-const p = document.getElementById("password");
-const msg = document.getElementById("msg");
+/* ===== SIGN UP ===== */
+window.signup = function(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-document.getElementById("signup").addEventListener("click", async () => {
-  if(!u.value || !p.value){
-    msg.innerText = "Fill all fields";
+  if(!email || !password){
+    alert("Email aur password daal bhai");
     return;
   }
 
-  const userRef = ref(db, "users/" + u.value);
-  const snap = await get(userRef);
+  const userId = email.replace(/[@.]/g,"_");
 
-  if(snap.exists()){
-    msg.innerText = "Username already exists";
-    return;
-  }
-
-  await set(userRef, {
-    password: p.value,
-    online: false
+  set(ref(db,"users/"+userId),{
+    email:email,
+    password:password
+  }).then(()=>{
+    alert("Signup successful ✅");
+  }).catch(err=>{
+    alert(err.message);
   });
+}
 
-  localStorage.setItem("user", u.value);
-  location.href = "chat.html";
-});
+/* ===== LOGIN ===== */
+window.login = function(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-document.getElementById("login").addEventListener("click", async () => {
-  const userRef = ref(db, "users/" + u.value);
-  const snap = await get(userRef);
+  const userId = email.replace(/[@.]/g,"_");
 
-  if(!snap.exists() || snap.val().password !== p.value){
-    msg.innerText = "Invalid login";
-    return;
-  }
+  get(ref(db,"users/"+userId)).then(snapshot=>{
+    if(snapshot.exists()){
+      if(snapshot.val().password === password){
+        alert("Login successful 🔥");
+        window.location.href = "chat.html";
+      }else{
+        alert("Password galat hai ❌");
+      }
+    }else{
+      alert("User nahi mila ❌");
+    }
+  });
+}
 
-  localStorage.setItem("user", u.value);
-  location.href = "chat.html";
-});
 </script>
 
 </body>
