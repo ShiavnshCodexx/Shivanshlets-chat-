@@ -19,12 +19,12 @@ body{
 .bg{
   position:fixed;inset:0;z-index:-1;
   background:
-    radial-gradient(circle at 10% 20%,rgba(0,255,156,.18),transparent 35%),
-    radial-gradient(circle at 90% 30%,rgba(59,130,246,.18),transparent 35%),
-    radial-gradient(circle at 50% 80%,rgba(168,85,247,.18),transparent 35%);
-  animation:flow 12s ease-in-out infinite;
+    radial-gradient(circle at 15% 20%,rgba(0,255,156,.18),transparent 35%),
+    radial-gradient(circle at 85% 30%,rgba(59,130,246,.18),transparent 35%),
+    radial-gradient(circle at 50% 85%,rgba(168,85,247,.18),transparent 35%);
+  animation:flow 14s ease-in-out infinite;
 }
-@keyframes flow{50%{filter:hue-rotate(40deg)}}
+@keyframes flow{50%{filter:hue-rotate(35deg)}}
 
 /* AUTH */
 .auth{
@@ -60,18 +60,32 @@ button{font-weight:600;cursor:pointer}
   height:100vh;
   display:flex;
   flex-direction:column;
+  background:#0b141a;
 }
-.top{
-  background:#020617;
-  padding:15px;
-  text-align:center;
-  font-weight:600;
-  border-bottom:1px solid #111;
+
+/* HEADER */
+.chatHeader{
+  background:#075e54;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
 }
+.chatHeader .title{
+  font-weight:700;
+  font-size:16px;
+}
+.chatHeader .sub{
+  font-size:12px;
+  opacity:.8;
+}
+
+/* MESSAGES */
 .messages{
   flex:1;
-  padding:14px;
+  padding:12px;
   overflow-y:auto;
+  background:
+    radial-gradient(circle at center,rgba(255,255,255,.03),transparent 60%);
 }
 .bubble{
   max-width:78%;
@@ -79,24 +93,38 @@ button{font-weight:600;cursor:pointer}
   border-radius:16px;
   margin-bottom:8px;
   font-size:14px;
+  line-height:1.4;
+  word-wrap:break-word;
 }
 .me{
-  background:#00ff9c;
+  background:#dcf8c6;
   color:#000;
   margin-left:auto;
   border-bottom-right-radius:4px;
 }
 .other{
   background:#1f2937;
+  color:#fff;
   border-bottom-left-radius:4px;
 }
+
+/* INPUT */
 .inputBar{
   display:flex;
-  padding:10px;
+  padding:8px;
   gap:8px;
-  background:#020617;
+  background:#0b141a;
 }
-.inputBar input{flex:1}
+.inputBar input{
+  flex:1;
+  border-radius:20px;
+}
+.inputBar button{
+  border-radius:50%;
+  width:44px;
+  height:44px;
+  padding:0;
+}
 </style>
 </head>
 
@@ -135,11 +163,16 @@ button{font-weight:600;cursor:pointer}
 
 <!-- CHAT -->
 <div id="chatBox" class="hidden chatWrap">
-  <div class="top" id="chatTitle"></div>
+  <div class="chatHeader">
+    <div class="title">Shivanshcodex</div>
+    <div class="sub">Support Chat • Online</div>
+  </div>
+
   <div class="messages" id="msgs"></div>
+
   <div class="inputBar">
-    <input id="msg" placeholder="Message…">
-    <button class="green" onclick="send()">Send</button>
+    <input id="msg" placeholder="Type a message">
+    <button class="green" onclick="send()">➤</button>
   </div>
 </div>
 
@@ -160,11 +193,9 @@ const db=getDatabase(app);
 
 let user="",admin=false;
 
-/* UI */
 window.showCreate=()=>{loginBox.classList.add("hidden");createBox.classList.remove("hidden")}
 window.back=()=>{createBox.classList.add("hidden");loginBox.classList.remove("hidden")}
 
-/* CREATE ACCOUNT */
 window.createAcc=async()=>{
   if(!cUser.value||!cPass.value) return alert("Fill all fields");
   await set(ref(db,"users/"+cUser.value),{pass:cPass.value});
@@ -172,29 +203,25 @@ window.createAcc=async()=>{
   back();
 };
 
-/* USER LOGIN */
 window.login=async()=>{
   const snap=await get(ref(db,"users/"+lUser.value));
   if(!snap.exists()||snap.val().pass!==lPass.value)
     return alert("Invalid login");
   user=lUser.value;
-  openChat("Chat with Shivansh");
+  openChat();
 };
 
-/* ADMIN LOGIN */
 window.adminLogin=()=>{
   if(aUser.value==="shiavnsh@62718"&&aPass.value==="chrome@7282"){
     admin=true;
-    openChat("Admin Panel");
+    openChat();
   }else alert("Wrong admin login");
 };
 
-/* CHAT */
-function openChat(title){
+function openChat(){
   loginBox.classList.add("hidden");
   createBox.classList.add("hidden");
   chatBox.classList.remove("hidden");
-  chatTitle.innerText=title;
   msgs.innerHTML="";
   const path=admin?"messages":"messages/"+user;
   onChildAdded(ref(db,path),s=>{
@@ -203,7 +230,7 @@ function openChat(title){
     d.className="bubble "+(m.by==="user"?"me":"other");
     d.innerText=m.text;
     msgs.appendChild(d);
-    msgs.scrollTop=99999;
+    msgs.scrollTop=msgs.scrollHeight;
   });
 }
 
