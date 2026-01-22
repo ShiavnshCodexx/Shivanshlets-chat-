@@ -13,28 +13,40 @@
   <input id="password" type="password" placeholder="Password">
   <button onclick="signup()">SIGN UP</button>
   <button onclick="login()">LOGIN</button>
+  <p id="msg"></p>
 </div>
 
 <script type="module">
-import { auth, db } from "./firebase.js";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from
-"https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { ref, set } from
+import { db } from "./firebase.js";
+import { ref, set, get, child } from
 "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const email = u => u+"@shivanshcodex.com";
+window.signup = async () => {
+  const u = username.value.trim();
+  const p = password.value.trim();
+  if(!u || !p) return msg.innerText="Fill all fields";
 
-window.signup = async()=>{
-  let u=username.value,p=password.value;
-  let c=await createUserWithEmailAndPassword(auth,email(u),p);
-  await set(ref(db,"users/"+c.user.uid),{
-    username:u,role:"user"
+  const snap = await get(ref(db,"users/"+u));
+  if(snap.exists()) return msg.innerText="Username already exists";
+
+  await set(ref(db,"users/"+u),{
+    password:p,
+    online:false
   });
+
+  localStorage.setItem("user",u);
   location.href="chat.html";
 };
 
-window.login = async()=>{
-  await signInWithEmailAndPassword(auth,email(username.value),password.value);
+window.login = async () => {
+  const u=username.value.trim();
+  const p=password.value.trim();
+  const snap = await get(ref(db,"users/"+u));
+  if(!snap.exists() || snap.val().password!==p){
+    msg.innerText="Invalid login";
+    return;
+  }
+  localStorage.setItem("user",u);
   location.href="chat.html";
 };
 </script>
