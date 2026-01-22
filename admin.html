@@ -12,7 +12,7 @@
   <div class="chat">
     <div id="adminMsgs"></div>
     <input id="reply">
-    <button onclick="replySend()">SEND</button>
+    <button onclick="send()">SEND</button>
   </div>
 </div>
 
@@ -23,19 +23,19 @@ import { ref, onValue, push } from
 
 let current=null;
 
-onValue(ref(db,"users"),snap=>{
+onValue(ref(db,"users"), snap=>{
   users.innerHTML="";
   snap.forEach(u=>{
     let d=document.createElement("div");
-    d.textContent=u.val().username;
-    d.onclick=()=>open(u.key);
+    d.textContent = (u.val().online?"🟢 ":"⚫ ") + u.key;
+    d.onclick=()=>openChat(u.key);
     users.appendChild(d);
   });
 });
 
-function open(uid){
-  current=uid;
-  onValue(ref(db,"chats/"+uid+"/messages"),s=>{
+function openChat(u){
+  current=u;
+  onValue(ref(db,"chats/"+u), s=>{
     adminMsgs.innerHTML="";
     s.forEach(m=>{
       adminMsgs.innerHTML+=`<div>${m.val().from}: ${m.val().text}</div>`;
@@ -43,10 +43,12 @@ function open(uid){
   });
 }
 
-window.replySend=()=>{
-  if(!reply.value) return;
-  push(ref(db,"chats/"+current+"/messages"),{
-    from:"admin",text:reply.value,time:Date.now()
+window.send=()=>{
+  if(!reply.value||!current) return;
+  push(ref(db,"chats/"+current),{
+    from:"admin",
+    text:reply.value,
+    time:Date.now()
   });
   reply.value="";
 };
