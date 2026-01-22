@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Admin – ShivanshCodex</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +13,7 @@
   <div class="chat">
     <div id="adminMsgs"></div>
     <input id="reply">
-    <button onclick="send()">SEND</button>
+    <button id="send">SEND</button>
   </div>
 </div>
 
@@ -21,37 +22,37 @@ import { db } from "./firebase.js";
 import { ref, onValue, push } from
 "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-let current=null;
+let current = null;
 
-onValue(ref(db,"users"), snap=>{
-  users.innerHTML="";
-  snap.forEach(u=>{
-    let d=document.createElement("div");
-    d.textContent = (u.val().online?"🟢 ":"⚫ ") + u.key;
-    d.onclick=()=>openChat(u.key);
+onValue(ref(db,"users"), snap => {
+  users.innerHTML = "";
+  snap.forEach(u => {
+    let d = document.createElement("div");
+    d.innerText = (u.val().online?"🟢 ":"⚫ ") + u.key;
+    d.onclick = () => openChat(u.key);
     users.appendChild(d);
   });
 });
 
 function openChat(u){
-  current=u;
-  onValue(ref(db,"chats/"+u), s=>{
-    adminMsgs.innerHTML="";
-    s.forEach(m=>{
-      adminMsgs.innerHTML+=`<div>${m.val().from}: ${m.val().text}</div>`;
+  current = u;
+  onValue(ref(db,"chats/"+u), s => {
+    adminMsgs.innerHTML = "";
+    s.forEach(m => {
+      adminMsgs.innerHTML += `<div>${m.val().from}: ${m.val().text}</div>`;
     });
   });
 }
 
-window.send=()=>{
-  if(!reply.value||!current) return;
-  push(ref(db,"chats/"+current),{
+document.getElementById("send").addEventListener("click", () => {
+  if(!current || !reply.value) return;
+  push(ref(db,"chats/"+current), {
     from:"admin",
     text:reply.value,
     time:Date.now()
   });
-  reply.value="";
-};
+  reply.value = "";
+});
 </script>
 
 </body>
