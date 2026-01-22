@@ -93,6 +93,11 @@ button{background:#00ff9c;color:#000;font-weight:600}
   color:#fff;
   margin:10px;
 }
+.userItem{
+  padding:10px;
+  border-bottom:1px solid #2a3942;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -107,7 +112,6 @@ button{background:#00ff9c;color:#000;font-weight:600}
   <input id="lPass" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
   <div class="link" onclick="showSignup()">Create account</div>
-  <div class="link" onclick="adminLogin()">Admin login</div>
 </div>
 
 <!-- SIGNUP -->
@@ -133,8 +137,7 @@ button{background:#00ff9c;color:#000;font-weight:600}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getDatabase, ref, set, get, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
@@ -145,55 +148,83 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getDatabase(app);
 
 let currentUser = "";
 let isAdmin = false;
+let currentChatUser = "";
+
+const ADMIN_USER = "shiavnsh@62718";
+const ADMIN_PASS = "chrome@7282";
 
 window.showSignup=()=>{loginBox.style.display="none";signupBox.style.display="block";}
 window.showLogin=()=>{signupBox.style.display="none";loginBox.style.display="block";}
 
-window.signup=()=>{
-  const u=sUser.value.trim(),p=sPass.value;
-  if(!u||!p)return alert("Fill all");
-  createUserWithEmailAndPassword(auth, u+"@user.shivansh", p);
+window.signup = async ()=>{
+  const u=sUser.value.trim(), p=sPass.value;
+  if(!u||!p) return alert("Fill all");
+  const snap = await get(ref(db,"users/"+u));
+  if(snap.exists()) return alert("Username already exists");
+  await set(ref(db,"users/"+u),{password:p});
+  alert("Account created. Login now.");
+  showLogin();
 };
 
-window.login=()=>{
-  signInWithEmailAndPassword(auth, lUser.value+"@user.shivansh", lPass.value);
+window.login = async ()=>{
+  const u=lUser.value.trim(), p=lPass.value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    isAdmin=true;
+    currentUser="ADMIN";
+    openChat();
+    loadAdminUsers();
+    return;
+  }
+  const snap = await get(ref(db,"users/"+u));
+  if(!snap.exists() || snap.val().password!==p){
+    alert("Invalid login");
+    return;
+  }
+  currentUser=u;
+  currentChatUser=u;
+  openChat();
+  loadChat(u);
 };
 
-window.adminLogin=()=>{
-  signInWithEmailAndPassword(auth, "admin@shivanshcodex.com", "chrome@7282");
-};
-
-onAuthStateChanged(auth,user=>{
-  if(!user)return;
+function openChat(){
   loginBox.style.display=signupBox.style.display="none";
   chatBox.style.display="flex";
-
-  isAdmin=user.email==="admin@shivanshcodex.com";
-  currentUser=isAdmin?"ADMIN":user.email.split("@")[0];
   adminTag.textContent=isAdmin?"🛡 ADMIN MODE":"";
+}
 
-  onChildAdded(ref(db,"messages"),snap=>{
+function loadChat(user){
+  messages.innerHTML="";
+  onChildAdded(ref(db,"messages/"+user),snap=>{
     const d=snap.val();
     const div=document.createElement("div");
-    div.className="msg "+(d.user===currentUser?"me":"other");
-    div.textContent=d.user+": "+d.text;
+    div.className="msg "+(d.from===currentUser?"me":"other");
+    div.textContent=d.text;
     messages.appendChild(div);
     messages.scrollTop=999999;
   });
-});
+}
 
-window.sendMsg=()=>{
-  if(!msgInput.value)return;
-  push(ref(db,"messages"),{user:currentUser,text:msgInput.value});
+function loadAdminUsers(){
+  messages.innerHTML="<div style='opacity:.7'>Select user from DB</div>";
+}
+
+window.sendMsg = ()=>{
+  if(!msgInput.value) return;
+  const target = isAdmin ? currentChatUser : currentUser;
+  push(ref(db,"messages/"+target),{
+    from:currentUser,
+    text:msgInput.value
+  });
   msgInput.value="";
 };
 
-window.logout=()=>signOut(auth);
+window.logout = ()=>{
+  location.reload();
+};
 </script>
 </body>
 </html>
