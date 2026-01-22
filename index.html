@@ -9,7 +9,6 @@
 *{box-sizing:border-box;font-family:system-ui}
 body{
   margin:0;
-  min-height:100vh;
   background:#000;
   color:#fff;
 }
@@ -22,19 +21,19 @@ body{
     radial-gradient(circle at 20% 30%, #00ff9c55, transparent 45%),
     radial-gradient(circle at 80% 70%, #00bfa555, transparent 45%),
     linear-gradient(120deg,#020d0a,#071a16,#020d0a);
-  animation:bgMove 12s linear infinite alternate;
-  z-index:-2;
+  animation:bgMove 14s linear infinite alternate;
+  z-index:-1;
 }
 @keyframes bgMove{
   from{background-position:0% 0%,100% 100%,0% 50%}
   to{background-position:100% 50%,0% 0%,100% 50%}
 }
 
-/* ===== APP ===== */
+/* ===== APP (REAL MOBILE FIX) ===== */
 .app{
   max-width:420px;
   margin:auto;
-  min-height:100vh;
+  height:100dvh; /* 🔥 MOST IMPORTANT FIX */
   display:flex;
   flex-direction:column;
   background:#111b21dd;
@@ -54,17 +53,13 @@ body{
   color:#00ff9c;
   font-weight:700;
   font-size:18px;
-  text-shadow:
-    0 0 6px #00ff9c,
-    0 0 18px #00ff9c88;
+  text-shadow:0 0 8px #00ff9c,0 0 20px #00ff9c88;
 }
 .logout{
   font-size:13px;
   color:#00ff9c;
   cursor:pointer;
-  opacity:.85;
 }
-.logout:hover{opacity:1}
 
 /* ===== AUTH ===== */
 .box{padding:20px}
@@ -75,39 +70,24 @@ input,button{
   border:none;
   font-size:15px;
 }
-input{
-  background:#1f2c34;
-  color:#fff;
-  margin-bottom:10px;
-}
-button{
-  background:#00ff9c;
-  color:#000;
-  font-weight:600;
-}
-.link{
-  text-align:center;
-  margin-top:10px;
-  font-size:14px;
-  opacity:.8;
-  cursor:pointer;
-}
+input{background:#1f2c34;color:#fff;margin-bottom:10px}
+button{background:#00ff9c;color:#000;font-weight:600}
+.link{text-align:center;margin-top:10px;font-size:14px;opacity:.8;cursor:pointer}
 
 /* ===== CHAT ===== */
 .chat{
   flex:1;
   display:none;
   flex-direction:column;
+  min-height:0; /* 🔥 critical */
 }
 
-/* messages area */
 .messages{
   flex:1;
   padding:14px;
   overflow-y:auto;
 }
 
-/* message bubble */
 .msg{
   max-width:75%;
   padding:10px 14px;
@@ -125,7 +105,7 @@ button{
   border-bottom-left-radius:4px;
 }
 
-/* ===== INPUT BAR (MOBILE SAFE) ===== */
+/* ===== WHATSAPP STYLE INPUT (FINAL FIX) ===== */
 .inputBar{
   display:flex;
   align-items:center;
@@ -133,7 +113,9 @@ button{
   padding:10px;
   background:#111b21;
   border-top:1px solid #00ff9c22;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom));
 }
+
 .inputBar input{
   flex:1;
   padding:14px 18px;
@@ -143,7 +125,7 @@ button{
   margin:0;
 }
 
-/* send button */
+/* SEND BUTTON */
 .sendBtn{
   width:44px;
   height:44px;
@@ -158,7 +140,7 @@ button{
 }
 .sendBtn:active{
   transform:scale(.88);
-  box-shadow:0 0 10px #00ff9c;
+  box-shadow:0 0 12px #00ff9c;
 }
 </style>
 </head>
@@ -168,7 +150,6 @@ button{
 
 <div class="app">
 
-<!-- HEADER -->
 <div class="header">
   <div class="title">Shivanshcodex</div>
   <div class="logout" onclick="logout()">Logout</div>
@@ -205,77 +186,49 @@ button{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getDatabase, ref, set, get, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-/* ===== FIREBASE ===== */
 const app = initializeApp({
   apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
   databaseURL: "https://shivanshchat-b66da-default-rtdb.firebaseio.com",
   projectId: "shivanshchat-b66da"
 });
 const db = getDatabase(app);
+let user="";
 
-let currentUser = "";
+window.showSignup=()=>{loginBox.style.display="none";signupBox.style.display="block";}
+window.showLogin=()=>{signupBox.style.display="none";loginBox.style.display="block";}
 
-/* UI SWITCH */
-window.showSignup = ()=>{
-  loginBox.style.display="none";
-  signupBox.style.display="block";
-};
-window.showLogin = ()=>{
-  signupBox.style.display="none";
-  loginBox.style.display="block";
-};
-
-/* SIGNUP */
-window.signup = async()=>{
-  const u=sUser.value.trim();
-  const p=sPass.value;
-  if(!u||!p) return alert("Fill all fields");
-  if((await get(ref(db,"users/"+u))).exists())
-    return alert("Username already exists");
-  await set(ref(db,"users/"+u),{password:p});
+window.signup=async()=>{
+  if(!sUser.value||!sPass.value)return alert("Fill all");
+  if((await get(ref(db,"users/"+sUser.value))).exists())return alert("Username exists");
+  await set(ref(db,"users/"+sUser.value),{password:sPass.value});
   alert("Account created");
   showLogin();
 };
 
-/* LOGIN */
-window.login = async()=>{
-  const u=lUser.value.trim();
-  const p=lPass.value;
-  const snap = await get(ref(db,"users/"+u));
-  if(!snap.exists() || snap.val().password!==p)
-    return alert("Invalid login");
-  currentUser=u;
-  loginBox.style.display="none";
-  signupBox.style.display="none";
+window.login=async()=>{
+  const snap=await get(ref(db,"users/"+lUser.value));
+  if(!snap.exists()||snap.val().password!==lPass.value)return alert("Invalid login");
+  user=lUser.value;
+  loginBox.style.display=signupBox.style.display="none";
   chatBox.style.display="flex";
-
-  onChildAdded(ref(db,"messages/"+u), s=>{
-    addMsg(s.val());
-  });
+  onChildAdded(ref(db,"messages/"+user),s=>addMsg(s.val()));
 };
 
-/* ADD MESSAGE */
 function addMsg(d){
   const div=document.createElement("div");
-  div.className="msg "+(d.from===currentUser?"me":"other");
+  div.className="msg "+(d.from===user?"me":"other");
   div.textContent=d.text;
   messages.appendChild(div);
   messages.scrollTop=messages.scrollHeight;
 }
 
-/* SEND MESSAGE */
-window.sendMsg = ()=>{
-  const t=msgInput.value.trim();
-  if(!t) return;
-  push(ref(db,"messages/"+currentUser),{
-    from:currentUser,
-    text:t
-  });
+window.sendMsg=()=>{
+  if(!msgInput.value.trim())return;
+  push(ref(db,"messages/"+user),{from:user,text:msgInput.value});
   msgInput.value="";
 };
 
-/* LOGOUT */
-window.logout = ()=>location.reload();
+window.logout=()=>location.reload();
 </script>
 </body>
 </html>
