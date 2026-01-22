@@ -2,139 +2,90 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Shivanshcodex</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+*{box-sizing:border-box;font-family:system-ui}
 body{
-  background:linear-gradient(120deg,#000,#020b1f,#000);
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
+  margin:0;min-height:100vh;
+  background:linear-gradient(120deg,#020024,#090979,#00d4ff);
+  display:flex;align-items:center;justify-content:center;
 }
 .card{
-  width:100%;
-  max-width:380px;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(10px);
-  border-radius:16px;
-  padding:20px;
-  box-shadow:0 0 25px #00ffe155;
+  width:100%;max-width:360px;
+  background:#000000cc;color:#00ffcc;
+  padding:20px;border-radius:14px;
 }
-h1{
-  text-align:center;
-  color:#00ffe1;
-  text-shadow:0 0 15px #00ffe1;
-  margin-bottom:20px;
-}
+h2{text-align:center;margin-bottom:15px}
 input,button{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  margin-bottom:12px;
-  font-size:15px;
+  width:100%;padding:12px;
+  margin-top:10px;border-radius:8px;
+  border:none;font-size:16px;
 }
-input{background:#111;color:#fff}
-button{
-  background:#00ffe1;
-  color:#000;
-  font-weight:700;
-}
-.link{
-  text-align:center;
-  color:#00ffe1;
-  cursor:pointer;
-  margin-top:8px;
-}
-.hidden{display:none}
+input{background:#111;color:#00ffcc}
+button{background:#00ffcc;color:#000;font-weight:bold}
+.toggle{text-align:center;margin-top:10px;cursor:pointer}
 </style>
 </head>
-
 <body>
 
 <div class="card">
-  <h1>Shivanshcodex</h1>
+  <h2>Shivanshcodex</h2>
 
-  <!-- LOGIN -->
-  <div id="loginBox">
-    <input id="loginUser" placeholder="Username">
-    <input id="loginPass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <div class="link" onclick="toggle()">Create account</div>
-  </div>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">LOGIN</button>
 
-  <!-- CREATE -->
-  <div id="createBox" class="hidden">
-    <input id="newUser" placeholder="New Username">
-    <input id="newPass" type="password" placeholder="New Password">
-    <button onclick="createAccount()">Create Account</button>
-    <div class="link" onclick="toggle()">Back to login</div>
-  </div>
+  <div class="toggle" onclick="signup()">Create Account</div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
-  authDomain: "shivanshchat-b66da.firebaseapp.com",
-  projectId: "shivanshchat-b66da",
-  storageBucket: "shivanshchat-b66da.firebasestorage.app",
-  messagingSenderId: "715877321366",
-  appId: "1:715877321366:web:f7fcb3bb106518978350b7",
-  databaseURL:"https://shivanshchat-b66da-default-rtdb.firebaseio.com"
+ apiKey:"AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
+ authDomain:"shivanshchat-b66da.firebaseapp.com",
+ projectId:"shivanshchat-b66da",
+ databaseURL:"https://shivanshchat-b66da-default-rtdb.firebaseio.com"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ADMIN CREDS
-const ADMIN_USER = "shiavnsh@62718";
-const ADMIN_PASS = "chrome@7282";
+window.login = async () => {
+ const u = username.value.trim();
+ const p = password.value.trim();
+ if(!u||!p) return alert("Fill all");
 
-window.toggle = ()=>{
-  loginBox.classList.toggle("hidden");
-  createBox.classList.toggle("hidden");
-};
+ // 🔐 ADMIN CHECK
+ if(u==="shiavnsh@62718" && p==="chrome@7282"){
+   localStorage.setItem("role","admin");
+   location.href="admin.html";
+   return;
+ }
 
-window.createAccount = ()=>{
-  const u=newUser.value.trim();
-  const p=newPass.value.trim();
-  if(!u||!p) return alert("Fill all fields");
+ const snap = await get(ref(db,"users/"+u));
+ if(!snap.exists()) return alert("Account not found");
+ if(snap.val().password!==p) return alert("Wrong password");
 
-  set(ref(db,"users/"+u),{password:p});
-  alert("Account created");
-  toggle();
-};
+ localStorage.setItem("user",u);
+ localStorage.setItem("role","user");
+ location.href="chat.html";
+}
 
-window.login = async ()=>{
-  const u=loginUser.value.trim();
-  const p=loginPass.value.trim();
+window.signup = async () => {
+ const u = username.value.trim();
+ const p = password.value.trim();
+ if(!u||!p) return alert("Fill all");
 
-  // ADMIN LOGIN
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    localStorage.setItem("role","admin");
-    location.href="admin.html";
-    return;
-  }
-
-  // USER LOGIN
-  const snap = await get(ref(db,"users/"+u));
-  if(!snap.exists() || snap.val().password!==p){
-    alert("Invalid login");
-    return;
-  }
-
-  localStorage.setItem("user",u);
-  alert("Login success (chat page next)");
-};
+ await set(ref(db,"users/"+u),{
+   password:p,
+   created:Date.now()
+ });
+ alert("Account created, now login");
+}
 </script>
-
 </body>
 </html>
