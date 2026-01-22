@@ -1,0 +1,26 @@
+*{box-sizing:border-box;font-family:JetBrains Mono}
+body{margin:0;background:#000;color:#00ff9c}
+
+.center-box{
+  max-width:320px;margin:15vh auto;
+  border:1px solid #00ff9c;padding:20px;text-align:center
+}
+input,button{
+  width:100%;padding:12px;margin-top:10px;
+  background:#000;color:#00ff9c;border:1px solid #00ff9c
+}
+
+.chat-container{display:flex;flex-direction:column;height:100vh}
+.chat-header{text-align:center;padding:12px;border-bottom:1px solid #00ff9c}
+.chat-messages{flex:1;overflow-y:auto;padding:10px}
+.msg{margin:6px 0;max-width:80%}
+.user{align-self:flex-end}
+.admin{color:#fff}
+.chat-input{display:flex;padding:10px;border-top:1px solid #00ff9c}
+.chat-input input{flex:1}
+
+.admin{display:flex;height:100vh}
+.users{width:30%;border-right:1px solid #00ff9c;overflow-y:auto}
+.users div{padding:10px;border-bottom:1px solid #003}
+.chat{flex:1;display:flex;flex-direction:column}
+#adminMsgs{flex:1;overflow-y:auto;padding:10px}
