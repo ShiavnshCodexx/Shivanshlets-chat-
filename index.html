@@ -7,57 +7,40 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{
-  background:#020617;color:#fff;min-height:100vh
-}
+body{background:#020617;color:#fff}
 .hidden{display:none}
-
-.container{
-  max-width:420px;margin:auto;padding:20px
-}
+.container{max-width:420px;margin:auto;padding:20px}
 h1{text-align:center;margin-bottom:20px}
 
 .card{
-  background:#020617;border-radius:18px;
-  padding:20px;box-shadow:0 0 25px #000
+  background:#020617;padding:20px;border-radius:18px;
+  box-shadow:0 0 30px #000
 }
-
 input,button{
   width:100%;padding:14px;margin-top:12px;
   border:none;border-radius:14px;font-size:15px
 }
 input{background:#fff;color:#000}
-
 .primary{background:#00ff9c;color:#000}
 .admin{background:#3b82f6;color:#fff}
 .danger{background:#ef4444;color:#fff}
 
-.chat{
-  display:flex;flex-direction:column;height:100vh
-}
+.chat{display:flex;flex-direction:column;height:100vh}
 .header{
-  padding:15px;background:#020617;
-  display:flex;justify-content:space-between;align-items:center
+  background:#020617;padding:15px;
+  display:flex;justify-content:space-between
 }
-.messages{
-  flex:1;padding:15px;overflow-y:auto
-}
+.messages{flex:1;padding:15px;overflow-y:auto}
 .msg{
   max-width:75%;padding:12px;margin-bottom:10px;
   border-radius:14px;font-size:14px
 }
 .user{background:#00ff9c;color:#000;margin-left:auto}
 .adminMsg{background:#3b82f6}
-
-.input{
-  display:flex;padding:10px;background:#020617
-}
+.input{display:flex;padding:10px}
 .input input{flex:1}
-.input button{
-  width:80px;margin-left:8px;
-  background:#00ff9c;color:#000
-}
-.small{font-size:12px;opacity:.7;margin-top:10px}
+.input button{width:80px;background:#00ff9c;color:#000;margin-left:6px}
+.ticket{padding:12px;background:#111;border-radius:12px;margin-bottom:10px}
 </style>
 </head>
 
@@ -65,126 +48,131 @@ input{background:#fff;color:#000}
 
 <!-- HOME -->
 <div id="home" class="container">
-  <h1>Contact Support</h1>
+<h1>Support Center</h1>
 
-  <div class="card">
-    <button class="primary" onclick="createTicket()">🎟️ Create New Ticket</button>
+<div class="card">
+<button class="primary" onclick="showCreate()">Create Ticket</button>
 
-    <input id="ticketId" placeholder="Ticket ID">
-    <input id="ticketPass" type="password" placeholder="Ticket Password">
+<input id="loginId" placeholder="Ticket ID">
+<input id="loginPass" type="password" placeholder="Ticket Password">
+<button class="primary" onclick="loginTicket()">Login Ticket</button>
 
-    <button class="primary" onclick="openTicket()">Open Ticket</button>
+<hr style="margin:15px 0;border:.5px solid #334155">
 
-    <hr style="margin:15px 0;border:.5px solid #334155">
+<input id="adminUser" placeholder="Admin Username">
+<input id="adminPass" type="password" placeholder="Admin Password">
+<button class="admin" onclick="adminLogin()">Admin Login</button>
+</div>
 
-    <button class="admin" onclick="adminLogin()">Admin Login</button>
-  </div>
+<div id="createBox" class="card hidden">
+<input id="name" placeholder="Your Name">
+<input id="pass" type="password" placeholder="Create Password">
+<button class="primary" onclick="createTicket()">Create</button>
+</div>
 </div>
 
 <!-- CHAT -->
 <div id="chat" class="chat hidden">
-  <div class="header">
-    <div id="title"></div>
-    <button class="danger" onclick="logout()">Exit</button>
-  </div>
+<div class="header">
+<div id="title"></div>
+<button class="danger" onclick="location.reload()">Exit</button>
+</div>
+<div id="messages" class="messages"></div>
+<div class="input">
+<input id="msg" placeholder="Type message">
+<button onclick="send()">Send</button>
+</div>
+</div>
 
-  <div id="messages" class="messages"></div>
-
-  <div class="input">
-    <input id="msg" placeholder="Write reply...">
-    <button onclick="send()">Send</button>
-  </div>
+<!-- ADMIN -->
+<div id="adminPanel" class="container hidden">
+<h1>Admin Panel</h1>
+<div id="ticketList"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getDatabase, ref, set, push, get, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
-  authDomain: "shivansh-codex-chat.firebaseapp.com",
-  projectId: "shivansh-codex-chat",
-  storageBucket: "shivansh-codex-chat.firebasestorage.app",
-  messagingSenderId: "503775406827",
-  appId: "1:503775406827:web:b60495fe496a3d4226acae"
-};
+const app = initializeApp({
+  apiKey:"AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
+  authDomain:"shivansh-codex-chat.firebaseapp.com",
+  projectId:"shivansh-codex-chat",
+  storageBucket:"shivansh-codex-chat.firebasestorage.app",
+  messagingSenderId:"503775406827",
+  appId:"1:503775406827:web:b60495fe496a3d4226acae"
+});
+const db=getDatabase(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+let ticket="",isAdmin=false;
 
-let ticket=null,isAdmin=false;
+/* UI */
+window.showCreate=()=>createBox.classList.toggle("hidden");
 
-/* CREATE TICKET */
-window.createTicket = async ()=>{
+/* CREATE */
+window.createTicket=async()=>{
+  if(!name.value||!pass.value)return alert("Fill all fields");
   const id="T"+Date.now().toString().slice(-6);
-  const pass=Math.random().toString(36).slice(-6);
-
   await set(ref(db,"tickets/"+id),{
-    password:pass
+    name:name.value,password:pass.value
   });
-
-  alert(`Ticket Created\n\nID: ${id}\nPassword: ${pass}`);
+  alert("Ticket Created\nID: "+id);
+  createBox.classList.add("hidden");
 };
 
-/* OPEN TICKET */
-window.openTicket = async ()=>{
-  const id=ticketId.value.trim(), p=ticketPass.value;
-  const snap=await get(ref(db,"tickets/"+id));
-  if(!snap.exists()) return alert("Ticket not found");
-  if(snap.val().password!==p) return alert("Wrong password");
-
-  ticket=id;isAdmin=false;
-  openChat("Ticket "+id);
+/* LOGIN */
+window.loginTicket=async()=>{
+  const snap=await get(ref(db,"tickets/"+loginId.value));
+  if(!snap.exists())return alert("Ticket not found");
+  if(snap.val().password!==loginPass.value)
+    return alert("Wrong password");
+  ticket=loginId.value;
+  openChat("Ticket "+ticket);
 };
 
-/* ADMIN LOGIN */
-window.adminLogin = async ()=>{
-  const p=ticketPass.value;
-  const snap=await get(ref(db,"admin/password"));
-  if(!snap.exists()){
-    await set(ref(db,"admin/password"),p);
-    alert("Admin password set");
-  }else if(snap.val()!==p){
-    return alert("Wrong admin password");
-  }
-  isAdmin=true;
-  ticket="ADMIN";
-  openChat("Admin Panel");
+/* ADMIN */
+window.adminLogin=async()=>{
+  if(adminUser.value!=="Shivanshcodex"||
+     adminPass.value!=="chrome@344")
+     return alert("Wrong admin login");
+
+  home.classList.add("hidden");
+  adminPanel.classList.remove("hidden");
+
+  const snap=await get(ref(db,"tickets"));
+  snap.forEach(t=>{
+    const d=document.createElement("div");
+    d.className="ticket";
+    d.innerText=t.key+" - "+t.val().name;
+    d.onclick=()=>{ticket=t.key;openChat("Admin: "+t.val().name)};
+    ticketList.appendChild(d);
+  });
 };
 
+/* CHAT */
 function openChat(t){
+  adminPanel.classList.add("hidden");
   home.classList.add("hidden");
   chat.classList.remove("hidden");
   title.innerText=t;
-  loadMessages();
+  onChildAdded(ref(db,"tickets/"+ticket+"/messages"),s=>{
+    const m=s.val();
+    const d=document.createElement("div");
+    d.className="msg "+(m.from==="admin"?"adminMsg":"user");
+    d.innerText=m.text;
+    messages.appendChild(d);
+    messages.scrollTop=999999;
+  });
 }
 
-/* SEND */
 window.send=()=>{
-  if(!msg.value.trim())return;
-  const path=isAdmin?"tickets":"tickets/"+ticket+"/messages";
-  push(ref(db,path),{
+  if(!msg.value)return;
+  push(ref(db,"tickets/"+ticket+"/messages"),{
     from:isAdmin?"admin":"user",
     text:msg.value,time:Date.now()
   });
   msg.value="";
 };
-
-/* LOAD */
-function loadMessages(){
-  const path=isAdmin?"tickets":"tickets/"+ticket+"/messages";
-  onChildAdded(ref(db,path),snap=>{
-    const m=snap.val();
-    if(!m.text)return;
-    const d=document.createElement("div");
-    d.className="msg "+(m.from==="admin"?"adminMsg":"user");
-    d.innerText=m.text;
-    messages.appendChild(d);
-    messages.scrollTop=messages.scrollHeight;
-  });
-}
-
-window.logout=()=>location.reload();
 </script>
 
 </body>
