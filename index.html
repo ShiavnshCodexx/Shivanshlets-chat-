@@ -2,289 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShivanshCodex Chat</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Shivansh Admin Chat</title>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{background:#0b1220;color:#fff;height:100vh}
+.hidden{display:none}
 
-body{
-  background:#0f172a;
-  color:#fff;
-  min-height:100vh;
+.screen{padding:20px}
+input,button{
+  width:100%;padding:14px;margin-top:10px;
+  border-radius:10px;border:none;font-size:16px
 }
+button{background:#00ff9c;color:#000;font-weight:600}
 
-/* ===== AUTH ===== */
-.auth{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
+.chat{
+  display:flex;flex-direction:column;height:100vh
 }
-
-.card{
-  width:100%;
-  max-width:380px;
-  background:#020617;
-  border-radius:18px;
-  padding:24px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
+.header{
+  padding:15px;background:#111b30;
+  display:flex;justify-content:space-between;align-items:center
 }
-
-.card h1{
-  text-align:center;
-  margin-bottom:6px;
-  font-size:24px;
-}
-
-.card p{
-  text-align:center;
-  font-size:14px;
-  color:#94a3b8;
-  margin-bottom:20px;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  margin-bottom:12px;
-  border-radius:12px;
-  border:none;
-  outline:none;
-  background:#0f172a;
-  color:#fff;
-  font-size:15px;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  background:#22c55e;
-  color:#000;
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
-}
-
-.switch{
-  text-align:center;
-  margin-top:14px;
-  font-size:14px;
-  color:#94a3b8;
-}
-.switch span{
-  color:#22c55e;
-  cursor:pointer;
-}
-
-/* ===== CHAT ===== */
-#chat{
-  display:none;
-  height:100vh;
-  flex-direction:column;
-}
-
-.top{
-  padding:14px 16px;
-  background:#020617;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.top strong{
-  font-size:16px;
-}
-
-.top small{
-  color:#22c55e;
-}
-
-.top button{
-  background:none;
-  border:none;
-  color:#f87171;
-  font-size:14px;
-}
-
 .messages{
-  flex:1;
-  padding:16px;
-  overflow-y:auto;
+  flex:1;padding:15px;overflow-y:auto
 }
-
 .msg{
-  max-width:75%;
-  padding:12px 14px;
-  border-radius:14px;
-  margin-bottom:10px;
-  background:#1e293b;
-  font-size:14px;
+  margin-bottom:10px;max-width:80%;
+  padding:10px;border-radius:12px
 }
-
-.me{
-  background:#22c55e;
-  color:#000;
-  margin-left:auto;
+.user{background:#00ff9c;color:#000;margin-left:auto}
+.admin{background:#222}
+.input{
+  display:flex;padding:10px;background:#111b30
 }
-
-.inputBar{
-  padding:12px;
-  display:flex;
-  gap:8px;
-  background:#020617;
-}
-
-.inputBar input{
-  flex:1;
-}
-
-.inputBar button{
-  width:auto;
-  padding:12px 18px;
-}
+.input input{flex:1}
+.input button{width:90px;margin-left:10px}
 </style>
 </head>
 
 <body>
 
-<!-- ===== AUTH ===== -->
-<div class="auth" id="auth">
-
-  <!-- LOGIN -->
-  <div class="card" id="loginCard">
-    <h1>ShivanshCodex</h1>
-    <p>Login to continue</p>
-
-    <input id="loginUser" placeholder="Username">
-    <input id="loginPass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-
-    <div class="switch">
-      New here? <span onclick="showSignup()">Create account</span>
-    </div>
-  </div>
-
-  <!-- SIGNUP -->
-  <div class="card" id="signupCard" style="display:none">
-    <h1>Create Account</h1>
-    <p>Join ShivanshCodex</p>
-
-    <input id="signupUser" placeholder="Username">
-    <input id="signupPass" type="password" placeholder="Password">
-    <button onclick="signup()">Signup</button>
-
-    <div class="switch">
-      Already have account? <span onclick="showLogin()">Login</span>
-    </div>
-  </div>
-
+<!-- LOGIN -->
+<div id="login" class="screen">
+  <h2>Login / Signup</h2>
+  <input id="username" placeholder="Username">
+  <button onclick="login()">Enter Chat</button>
 </div>
 
-<!-- ===== CHAT ===== -->
-<div id="chat">
-  <div class="top">
-    <div>
-      <strong id="userLabel"></strong><br>
-      <small>🟢 Online</small>
-    </div>
-    <button onclick="logout()">Logout</button>
+<!-- CHAT -->
+<div id="chat" class="chat hidden">
+  <div class="header">
+    <span id="title"></span>
+    <button onclick="logout()" style="background:red;color:#fff">Logout</button>
   </div>
 
-  <div class="messages" id="messages"></div>
+  <div id="messages" class="messages"></div>
 
-  <div class="inputBar">
-    <input id="msgInput" placeholder="Type a message...">
-    <button onclick="sendMsg()">Send</button>
+  <div class="input">
+    <input id="msg" placeholder="Type message">
+    <button onclick="send()">Send</button>
   </div>
 </div>
 
-<script>
-/* ===== SWITCH ===== */
-function showSignup(){
-  loginCard.style.display="none";
-  signupCard.style.display="block";
-}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-function showLogin(){
-  signupCard.style.display="none";
-  loginCard.style.display="block";
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
+  authDomain: "shivansh-codex-chat.firebaseapp.com",
+  projectId: "shivansh-codex-chat",
+  storageBucket: "shivansh-codex-chat.firebasestorage.app",
+  messagingSenderId: "503775406827",
+  appId: "1:503775406827:web:b60495fe496a3d4226acae"
+};
 
-/* ===== SIGNUP (FIXED) ===== */
-function signup(){
-  const u = signupUser.value.trim();
-  const p = signupPass.value.trim();
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-  if(u === "" || p === ""){
-    alert("Username aur password required");
-    return;
-  }
+let currentUser = localStorage.getItem("user");
+const isAdmin = currentUser === "admin";
 
-  if(localStorage.getItem("user_"+u)){
-    alert("Username already exists");
-    return;
-  }
+if(currentUser) openChat();
 
-  localStorage.setItem("user_"+u, p);
-  alert("Account created successfully ✅");
-  signupUser.value="";
-  signupPass.value="";
-  showLogin();
-}
-
-/* ===== LOGIN ===== */
-function login(){
-  const u = loginUser.value.trim();
-  const p = loginPass.value.trim();
-
-  const saved = localStorage.getItem("user_"+u);
-  if(saved !== p){
-    alert("Wrong username or password");
-    return;
-  }
-
-  localStorage.setItem("activeUser", u);
+window.login = ()=>{
+  const u = username.value.trim();
+  if(!u) return alert("Username required");
+  localStorage.setItem("user",u);
+  currentUser = u;
   openChat();
 }
 
-/* ===== CHAT ===== */
 function openChat(){
-  auth.style.display="none";
-  chat.style.display="flex";
-  userLabel.textContent = localStorage.getItem("activeUser");
+  login.classList.add("hidden");
+  chat.classList.remove("hidden");
+  title.innerText = currentUser === "admin" ? "ADMIN PANEL" : "Hello "+currentUser;
+  loadMessages();
 }
 
-function sendMsg(){
-  const text = msgInput.value.trim();
-  if(text === "") return;
-
-  const d = document.createElement("div");
-  d.className="msg me";
-  d.textContent=text;
-  messages.appendChild(d);
-
-  msgInput.value="";
-  messages.scrollTop = messages.scrollHeight;
+window.send = ()=>{
+  if(!msg.value.trim()) return;
+  const path = isAdmin ? "chats/"+selectedUser : "chats/"+currentUser;
+  push(ref(db,path+"/messages"),{
+    from: currentUser,
+    text: msg.value,
+    time: Date.now()
+  });
+  msg.value="";
 }
 
-/* ===== LOGOUT ===== */
-function logout(){
-  localStorage.removeItem("activeUser");
+function loadMessages(){
+  const path = isAdmin ? "chats" : "chats/"+currentUser;
+  const mRef = ref(db,path+"/messages");
+
+  onChildAdded(mRef,snap=>{
+    const m = snap.val();
+    const d = document.createElement("div");
+    d.className="msg "+(m.from==="admin"?"admin":"user");
+    d.innerText = m.text;
+    messages.appendChild(d);
+    messages.scrollTop=messages.scrollHeight;
+  });
+}
+
+window.logout=()=>{
+  localStorage.clear();
   location.reload();
-}
-
-/* ===== AUTO LOGIN ===== */
-if(localStorage.getItem("activeUser")){
-  openChat();
 }
 </script>
 
