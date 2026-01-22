@@ -2,61 +2,53 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Chat – ShivanshCodex</title>
+<title>ShivanshCodex Login</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">Chat with ShivanshCodex <span id="status">🟢</span></div>
-  <div class="chat-messages" id="msgs"></div>
-  <div class="chat-input">
-    <input id="msg" placeholder="Type message">
-    <button onclick="send()">SEND</button>
-  </div>
+<div class="center-box">
+  <h2>ShivanshCodex</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="signup()">SIGN UP</button>
+  <button onclick="login()">LOGIN</button>
+  <p id="msg"></p>
 </div>
 
-<audio id="sound"><source src="notify.mp3"></audio>
-
 <script type="module">
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from
-"https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { ref, push, onChildAdded, set, onDisconnect } from
+import { db } from "./firebase.js";
+import { ref, set, get, child } from
 "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-let uid;
+window.signup = async () => {
+  const u = username.value.trim();
+  const p = password.value.trim();
+  if(!u || !p) return msg.innerText="Fill all fields";
 
-onAuthStateChanged(auth,u=>{
-  if(!u) location.href="index.html";
-  uid=u.uid;
+  const snap = await get(ref(db,"users/"+u));
+  if(snap.exists()) return msg.innerText="Username already exists";
 
-  const sref=ref(db,"status/"+uid);
-  set(sref,{online:true});
-  onDisconnect(sref).set({online:false,lastSeen:Date.now()});
-
-  onChildAdded(ref(db,"chats/"+uid+"/messages"),snap=>{
-    let d=snap.val();
-    msgs.innerHTML+=`<div class="msg ${d.from}">${d.text}</div>`;
-    msgs.scrollTop=msgs.scrollHeight;
-    if(d.from==="admin"){
-      sound.play();
-      if(Notification.permission==="granted")
-        new Notification("ShivanshCodex",{body:d.text});
-    }
+  await set(ref(db,"users/"+u),{
+    password:p,
+    online:false
   });
-});
 
-window.send=()=>{
-  if(!msg.value) return;
-  push(ref(db,"chats/"+uid+"/messages"),{
-    from:"user",text:msg.value,time:Date.now()
-  });
-  msg.value="";
+  localStorage.setItem("user",u);
+  location.href="chat.html";
 };
 
-if(Notification.permission!=="granted")
-  Notification.requestPermission();
+window.login = async () => {
+  const u=username.value.trim();
+  const p=password.value.trim();
+  const snap = await get(ref(db,"users/"+u));
+  if(!snap.exists() || snap.val().password!==p){
+    msg.innerText="Invalid login";
+    return;
+  }
+  localStorage.setItem("user",u);
+  location.href="chat.html";
+};
 </script>
 
 </body>
