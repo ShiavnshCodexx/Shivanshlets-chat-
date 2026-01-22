@@ -1,17 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ShivanshCodex Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShivanshCodex</title>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<div class="bg-grid"></div>
-<div class="bg-scan"></div>
-<div class="bg-glow"></div>
 
 <div class="center-box">
   <h2>ShivanshCodex</h2>
@@ -19,61 +14,55 @@
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
 
-  <button id="signupBtn">SIGN UP</button>
-  <button id="loginBtn">LOGIN</button>
+  <button id="signup">SIGN UP</button>
+  <button id="login">LOGIN</button>
 
   <p id="msg"></p>
 </div>
 
 <script type="module">
 import { db } from "./firebase.js";
-import { ref, set, get } from
-"https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const username = document.getElementById("username");
-const password = document.getElementById("password");
+const u = document.getElementById("username");
+const p = document.getElementById("password");
 const msg = document.getElementById("msg");
 
-document.getElementById("signupBtn").addEventListener("click", signup);
-document.getElementById("loginBtn").addEventListener("click", login);
-
-async function signup(){
-  const u = username.value.trim();
-  const p = password.value.trim();
-
-  if(!u || !p){
+document.getElementById("signup").addEventListener("click", async () => {
+  if(!u.value || !p.value){
     msg.innerText = "Fill all fields";
     return;
   }
 
-  const snap = await get(ref(db,"users/"+u));
+  const userRef = ref(db, "users/" + u.value);
+  const snap = await get(userRef);
+
   if(snap.exists()){
     msg.innerText = "Username already exists";
     return;
   }
 
-  await set(ref(db,"users/"+u),{
-    password:p,
-    online:false
+  await set(userRef, {
+    password: p.value,
+    online: false
   });
 
-  localStorage.setItem("user",u);
+  localStorage.setItem("user", u.value);
   location.href = "chat.html";
-}
+});
 
-async function login(){
-  const u = username.value.trim();
-  const p = password.value.trim();
+document.getElementById("login").addEventListener("click", async () => {
+  const userRef = ref(db, "users/" + u.value);
+  const snap = await get(userRef);
 
-  const snap = await get(ref(db,"users/"+u));
-  if(!snap.exists() || snap.val().password !== p){
-    msg.innerText = "Invalid username or password";
+  if(!snap.exists() || snap.val().password !== p.value){
+    msg.innerText = "Invalid login";
     return;
   }
 
-  localStorage.setItem("user",u);
+  localStorage.setItem("user", u.value);
   location.href = "chat.html";
-}
+});
 </script>
 
 </body>
