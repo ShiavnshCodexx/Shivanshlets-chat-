@@ -1,216 +1,38 @@
-/* ===== RESET ===== */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:"JetBrains Mono", monospace;
-}
+*{box-sizing:border-box;font-family:monospace}
+body{margin:0;background:#000;color:#00ff9c}
 
-html,body{
-  width:100%;
-  height:100%;
-  background:#000;
-  color:#00ff9c;
-  overflow:hidden;
-}
-
-/* ===== BACKGROUND EFFECTS (SAFE) ===== */
-.bg-grid,
-.bg-scan,
-.bg-glow{
-  position:fixed;
-  inset:0;
-  pointer-events:none;   /* 🔥 click block nahi karega */
-  z-index:0;
-}
-
-.bg-grid{
-  background:
-    linear-gradient(rgba(0,255,156,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,156,.04) 1px,transparent 1px);
-  background-size:40px 40px;
-}
-
-.bg-scan{
-  background:repeating-linear-gradient(
-    to bottom,
-    rgba(0,255,156,.06) 0 1px,
-    transparent 2px 6px
-  );
-  animation:scan 6s linear infinite;
-}
-
-@keyframes scan{
-  to{ background-position:0 400px; }
-}
-
-.bg-glow{
-  background:radial-gradient(circle at top,
-    rgba(0,255,156,.12),
-    transparent 60%
-  );
-  animation:glow 4s ease-in-out infinite;
-}
-
-@keyframes glow{
-  50%{ opacity:.6; }
-}
-
-/* ===== CENTER LOGIN BOX ===== */
 .center-box{
-  position:relative;
-  z-index:5;             /* 🔥 background se upar */
-  max-width:340px;
-  margin:12vh auto;
-  padding:24px;
-  border:1px solid rgba(0,255,156,.7);
-  background:rgba(0,0,0,.85);
+  max-width:320px;
+  margin:15vh auto;
+  border:1px solid #00ff9c;
+  padding:20px;
   text-align:center;
 }
 
-/* 👇 YE LINE SABSE IMPORTANT HAI */
-.center-box,
-.center-box *{
-  pointer-events:auto !important;
-}
-
-/* ===== HEADINGS ===== */
-.center-box h2{
-  margin-bottom:18px;
-  letter-spacing:2px;
-}
-
-/* ===== INPUTS ===== */
-input{
-  width:100%;
-  margin-bottom:14px;
-  padding:12px;
-  background:#000;
-  border:1px solid rgba(0,255,156,.6);
-  color:#00ff9c;
-  outline:none;
-  font-size:1rem;
-}
-
-input::placeholder{
-  color:rgba(0,255,156,.4);
-}
-
-/* ===== BUTTONS ===== */
-button{
+input,button{
   width:100%;
   padding:12px;
   margin-top:10px;
-  background:transparent;
+  background:#000;
   border:1px solid #00ff9c;
   color:#00ff9c;
-  font-size:1rem;
-  letter-spacing:2px;
-  cursor:pointer;
-  transition:.25s;
 }
 
-button:hover{
-  background:#00ff9c;
-  color:#000;
-}
+button{cursor:pointer}
+button:hover{background:#00ff9c;color:#000}
 
-/* ===== CHAT LAYOUT ===== */
-.chat-container{
-  position:relative;
-  z-index:5;
-  display:flex;
-  flex-direction:column;
-  height:100vh;
-}
+.chat-container{display:flex;flex-direction:column;height:100vh}
+.chat-header{text-align:center;padding:10px;border-bottom:1px solid #00ff9c}
+.chat-messages{flex:1;padding:10px;overflow:auto}
+.msg{margin-bottom:8px}
+.user{text-align:right}
+.admin{color:#fff}
 
-.chat-header{
-  padding:14px;
-  text-align:center;
-  border-bottom:1px solid rgba(0,255,156,.4);
-  font-size:1.05rem;
-}
+.chat-input{display:flex;padding:10px;border-top:1px solid #00ff9c}
+.chat-input input{flex:1}
 
-.chat-messages{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
-}
-
-.msg{
-  margin-bottom:10px;
-  max-width:80%;
-  padding:8px 10px;
-  border:1px solid rgba(0,255,156,.4);
-  background:rgba(0,0,0,.6);
-}
-
-.msg.user{
-  margin-left:auto;
-}
-
-.msg.admin{
-  color:#fff;
-}
-
-.chat-input{
-  display:flex;
-  padding:10px;
-  border-top:1px solid rgba(0,255,156,.4);
-}
-
-.chat-input input{
-  flex:1;
-  margin:0;
-}
-
-.chat-input button{
-  width:auto;
-  margin-left:8px;
-}
-
-/* ===== ADMIN PANEL ===== */
-.admin{
-  position:relative;
-  z-index:5;
-  display:flex;
-  height:100vh;
-}
-
-.users{
-  width:35%;
-  border-right:1px solid rgba(0,255,156,.4);
-  overflow-y:auto;
-}
-
-.users div{
-  padding:12px;
-  border-bottom:1px solid rgba(0,255,156,.15);
-  cursor:pointer;
-}
-
-.users div:hover{
-  background:rgba(0,255,156,.08);
-}
-
-.chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-#adminMsgs{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
-}
-
-/* ===== MOBILE OPTIMIZATION ===== */
-@media(max-width:600px){
-  .center-box{
-    margin:8vh 14px;
-  }
-  .users{
-    width:40%;
-  }
-}
+.admin{display:flex;height:100vh}
+.users{width:35%;border-right:1px solid #00ff9c;overflow:auto}
+.users div{padding:10px;cursor:pointer}
+.chat{flex:1;display:flex;flex-direction:column}
+#adminMsgs{flex:1;padding:10px;overflow:auto}
