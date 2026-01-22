@@ -10,14 +10,12 @@
 body{
   margin:0;
   min-height:100vh;
-  display:flex;
-  justify-content:center;
-  color:#e9edef;
   background:#000;
   overflow:hidden;
+  color:#fff;
 }
 
-/* ===== REAL LIVE BACKGROUND ===== */
+/* ===== LIVE BACKGROUND ===== */
 .bg{
   position:fixed;
   inset:0;
@@ -25,82 +23,43 @@ body{
     radial-gradient(circle at 20% 20%, #00ff9c55, transparent 40%),
     radial-gradient(circle at 80% 80%, #00bfa555, transparent 45%),
     linear-gradient(120deg,#020d0a,#071a16,#020d0a);
-  animation: moveBG 12s linear infinite alternate;
-  filter: blur(0px);
+  animation:bgMove 12s linear infinite alternate;
   z-index:-2;
 }
-@keyframes moveBG{
-  0%{
-    background-position:0% 0%,100% 100%,0% 50%;
-  }
-  100%{
-    background-position:100% 50%,0% 0%,100% 50%;
-  }
+@keyframes bgMove{
+  from{background-position:0% 0%,100% 100%,0% 50%}
+  to{background-position:100% 50%,0% 0%,100% 50%}
 }
 
-/* floating glow */
-.bg::after{
-  content:"";
-  position:absolute;
-  inset:-50%;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      rgba(0,255,156,.05) 0 2px,
-      transparent 2px 8px
-    );
-  animation: scan 8s linear infinite;
-}
-@keyframes scan{
-  from{transform:translateY(0)}
-  to{transform:translateY(120px)}
-}
-
+/* ===== APP ===== */
 .app{
-  width:100%;
   max-width:420px;
+  margin:auto;
   min-height:100vh;
-  background:#111b21cc;
-  backdrop-filter: blur(6px);
   display:flex;
   flex-direction:column;
+  background:#111b21dd;
+  backdrop-filter:blur(6px);
 }
 
 /* ===== HEADER ===== */
 .header{
-  background:#111b21;
   padding:14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid #00ff9c22;
+  background:#111b21;
+  border-bottom:1px solid #00ff9c33;
 }
-
-/* NEON TITLE */
 .title{
-  font-size:18px;
+  color:#00ff9c;
   font-weight:700;
-  color:#00ff9c;
-  text-shadow:
-    0 0 5px #00ff9c,
-    0 0 15px #00ff9c88,
-    0 0 30px #00ff9c55;
-  animation: neonPulse 2s ease-in-out infinite alternate;
+  font-size:18px;
+  text-shadow:0 0 10px #00ff9c;
 }
-@keyframes neonPulse{
-  from{ text-shadow:0 0 5px #00ff9c,0 0 15px #00ff9c66;}
-  to{ text-shadow:0 0 10px #00ff9c,0 0 30px #00ff9caa;}
-}
+.logout{font-size:13px;color:#00ff9c;cursor:pointer}
 
-.logoutTop{
-  font-size:13px;
-  color:#00ff9c;
-  cursor:pointer;
-  opacity:.8;
-}
-.logoutTop:hover{opacity:1}
-
-/* AUTH */
+/* ===== LOGIN ===== */
 .box{padding:20px}
 input,button{
   width:100%;
@@ -109,37 +68,21 @@ input,button{
   border:none;
   font-size:15px;
 }
-input{
-  background:#1f2c34;
-  color:#fff;
-  margin-bottom:10px;
-}
-button{
-  background:#00ff9c;
-  color:#000;
-  font-weight:600;
-}
-.link{
-  text-align:center;
-  margin-top:10px;
-  font-size:14px;
-  opacity:.8;
-  cursor:pointer;
-}
+input{background:#1f2c34;color:#fff;margin-bottom:10px}
+button{background:#00ff9c;color:#000;font-weight:600}
+.link{text-align:center;margin-top:10px;font-size:14px;opacity:.8;cursor:pointer}
 
-/* CHAT */
-.chat{flex:1;display:none;flex-direction:column}
-
+/* ===== CHAT ===== */
+.chat{flex:1;display:none}
 .messages{
-  flex:1;
   padding:14px;
+  padding-bottom:90px; /* space for input bar */
   overflow-y:auto;
 }
-
 .msg{
   max-width:75%;
-  margin-bottom:10px;
   padding:10px 14px;
+  margin-bottom:8px;
   border-radius:14px;
   font-size:14px;
 }
@@ -153,30 +96,44 @@ button{
   border-bottom-left-radius:4px;
 }
 
-/* INPUT BAR (WhatsApp style) */
+/* ===== FIXED INPUT BAR ===== */
 .inputBar{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  max-width:420px;
   display:flex;
   align-items:center;
   gap:8px;
   padding:10px;
   background:#111b21;
+  border-top:1px solid #00ff9c22;
 }
 .inputBar input{
   flex:1;
   padding:14px 18px;
   border-radius:25px;
+  background:#1f2c34;
+  color:#fff;
   margin:0;
 }
+
+/* SEND BUTTON (WhatsApp feel) */
 .sendBtn{
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
   border-radius:50%;
   background:#00ff9c;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:20px;
   cursor:pointer;
+  transition:.15s;
+}
+.sendBtn:active{
+  transform:scale(.88);
+  box-shadow:0 0 10px #00ff9c;
 }
 </style>
 </head>
@@ -186,10 +143,9 @@ button{
 
 <div class="app">
 
-<!-- HEADER -->
 <div class="header">
   <div class="title">Shivanshcodex</div>
-  <div class="logoutTop" onclick="logout()">Logout</div>
+  <div class="logout" onclick="logout()">Logout</div>
 </div>
 
 <!-- LOGIN -->
@@ -223,52 +179,45 @@ button{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getDatabase, ref, set, get, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
-  authDomain: "shivanshchat-b66da.firebaseapp.com",
   databaseURL: "https://shivanshchat-b66da-default-rtdb.firebaseio.com",
-  projectId: "shivanshchat-b66da",
-  appId: "1:715877321366:web:f7fcb3bb106518978350b7"
-};
-
-const app = initializeApp(firebaseConfig);
+  projectId: "shivanshchat-b66da"
+});
 const db = getDatabase(app);
-
-let currentUser="";
+let user="";
 
 window.showSignup=()=>{loginBox.style.display="none";signupBox.style.display="block";}
 window.showLogin=()=>{signupBox.style.display="none";loginBox.style.display="block";}
 
 window.signup=async()=>{
-  const u=sUser.value.trim(),p=sPass.value;
-  if(!u||!p)return alert("Fill all");
-  if((await get(ref(db,"users/"+u))).exists())return alert("Username exists");
-  await set(ref(db,"users/"+u),{password:p});
+  if(!sUser.value||!sPass.value)return alert("Fill all");
+  if((await get(ref(db,"users/"+sUser.value))).exists())return alert("Username exists");
+  await set(ref(db,"users/"+sUser.value),{password:sPass.value});
   alert("Account created");
   showLogin();
 };
 
 window.login=async()=>{
-  const u=lUser.value.trim(),p=lPass.value;
-  const snap=await get(ref(db,"users/"+u));
-  if(!snap.exists()||snap.val().password!==p)return alert("Invalid login");
-  currentUser=u;
+  const snap=await get(ref(db,"users/"+lUser.value));
+  if(!snap.exists()||snap.val().password!==lPass.value)return alert("Invalid");
+  user=lUser.value;
   loginBox.style.display=signupBox.style.display="none";
-  chatBox.style.display="flex";
-  onChildAdded(ref(db,"messages/"+u),s=>addMsg(s.val()));
+  chatBox.style.display="block";
+  onChildAdded(ref(db,"messages/"+user),s=>addMsg(s.val()));
 };
 
 function addMsg(d){
   const div=document.createElement("div");
-  div.className="msg "+(d.from===currentUser?"me":"other");
+  div.className="msg "+(d.from===user?"me":"other");
   div.textContent=d.text;
   messages.appendChild(div);
   messages.scrollTop=messages.scrollHeight;
 }
 
 window.sendMsg=()=>{
-  if(!msgInput.value)return;
-  push(ref(db,"messages/"+currentUser),{from:currentUser,text:msgInput.value});
+  if(!msgInput.value.trim())return;
+  push(ref(db,"messages/"+user),{from:user,text:msgInput.value});
   msgInput.value="";
 };
 
