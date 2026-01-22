@@ -9,37 +9,27 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{
   height:100vh;
-  background:#020617;
+  background:#0b141a;
   color:#fff;
   overflow:hidden;
 }
 .hidden{display:none}
 
-/* LIVE BACKGROUND */
-.bg{
-  position:fixed;inset:0;z-index:-1;
-  background:
-    radial-gradient(circle at 15% 20%,rgba(0,255,156,.18),transparent 35%),
-    radial-gradient(circle at 85% 30%,rgba(59,130,246,.18),transparent 35%),
-    radial-gradient(circle at 50% 85%,rgba(168,85,247,.18),transparent 35%);
-  animation:flow 14s ease-in-out infinite;
-}
-@keyframes flow{50%{filter:hue-rotate(35deg)}}
-
-/* AUTH */
+/* ===== AUTH ===== */
 .auth{
-  max-width:420px;
-  margin:auto;
-  padding:20px;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 .card{
-  background:rgba(2,6,23,.85);
-  backdrop-filter:blur(14px);
-  border-radius:20px;
+  width:100%;
+  max-width:420px;
+  background:#111b21;
   padding:22px;
-  box-shadow:0 0 40px rgba(0,0,0,.6);
+  border-radius:18px;
 }
-h1{text-align:center;margin-bottom:20px}
+h1{text-align:center;margin-bottom:18px}
 
 input,button{
   width:100%;
@@ -50,13 +40,13 @@ input,button{
   font-size:15px;
 }
 input{background:#fff;color:#000}
-button{font-weight:600;cursor:pointer}
-.green{background:#00ff9c;color:#000}
+button{font-weight:600}
+.green{background:#25d366;color:#000}
 .blue{background:#3b82f6;color:#fff}
-.gray{background:#1f2937;color:#fff}
+.gray{background:#374151;color:#fff}
 
-/* CHAT (WHATSAPP STYLE) */
-.chatWrap{
+/* ===== CHAT ===== */
+.chat{
   height:100vh;
   display:flex;
   flex-direction:column;
@@ -64,17 +54,14 @@ button{font-weight:600;cursor:pointer}
 }
 
 /* HEADER */
-.chatHeader{
+.header{
   background:#075e54;
-  padding:12px 14px;
-  display:flex;
-  flex-direction:column;
+  padding:12px;
 }
-.chatHeader .title{
+.header .title{
   font-weight:700;
-  font-size:16px;
 }
-.chatHeader .sub{
+.header .sub{
   font-size:12px;
   opacity:.8;
 }
@@ -82,19 +69,15 @@ button{font-weight:600;cursor:pointer}
 /* MESSAGES */
 .messages{
   flex:1;
-  padding:12px;
+  padding:10px;
   overflow-y:auto;
-  background:
-    radial-gradient(circle at center,rgba(255,255,255,.03),transparent 60%);
 }
-.bubble{
-  max-width:78%;
+.msg{
+  max-width:75%;
   padding:10px 14px;
-  border-radius:16px;
   margin-bottom:8px;
+  border-radius:14px;
   font-size:14px;
-  line-height:1.4;
-  word-wrap:break-word;
 }
 .me{
   background:#dcf8c6;
@@ -108,71 +91,73 @@ button{font-weight:600;cursor:pointer}
   border-bottom-left-radius:4px;
 }
 
-/* INPUT */
+/* INPUT BAR */
 .inputBar{
   display:flex;
-  padding:8px;
+  align-items:center;
   gap:8px;
-  background:#0b141a;
+  padding:10px;
+  background:#111b21;
 }
 .inputBar input{
   flex:1;
   border-radius:20px;
+  padding:12px 14px;
 }
-.inputBar button{
-  border-radius:50%;
+.sendBtn{
   width:44px;
   height:44px;
-  padding:0;
+  border-radius:50%;
+  background:#25d366;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
-<div class="bg"></div>
 
 <!-- LOGIN -->
 <div id="loginBox" class="auth">
   <div class="card">
     <h1>Shivanshcodex</h1>
-
     <input id="lUser" placeholder="Username">
     <input id="lPass" type="password" placeholder="Password">
     <button class="green" onclick="login()">Login</button>
-
     <button class="gray" onclick="showCreate()">Create Account</button>
-
-    <hr style="margin:18px 0;border:.5px solid #334155">
-
+    <hr style="margin:16px 0;border:.5px solid #374151">
     <input id="aUser" placeholder="Admin Username">
     <input id="aPass" type="password" placeholder="Admin Password">
     <button class="blue" onclick="adminLogin()">Admin Login</button>
   </div>
 </div>
 
-<!-- CREATE ACCOUNT -->
+<!-- CREATE -->
 <div id="createBox" class="auth hidden">
   <div class="card">
     <h1>Create Account</h1>
-    <input id="cUser" placeholder="Create Username">
-    <input id="cPass" type="password" placeholder="Create Password">
+    <input id="cUser" placeholder="Username">
+    <input id="cPass" type="password" placeholder="Password">
     <button class="green" onclick="createAcc()">Create</button>
     <button class="gray" onclick="back()">Back</button>
   </div>
 </div>
 
 <!-- CHAT -->
-<div id="chatBox" class="hidden chatWrap">
-  <div class="chatHeader">
+<div id="chatBox" class="hidden chat">
+  <div class="header">
     <div class="title">Shivanshcodex</div>
-    <div class="sub">Support Chat • Online</div>
+    <div class="sub">WhatsApp-style Support Chat</div>
   </div>
 
   <div class="messages" id="msgs"></div>
 
   <div class="inputBar">
     <input id="msg" placeholder="Type a message">
-    <button class="green" onclick="send()">➤</button>
+    <div class="sendBtn" onclick="send()">➤</div>
   </div>
 </div>
 
@@ -199,7 +184,7 @@ window.back=()=>{createBox.classList.add("hidden");loginBox.classList.remove("hi
 window.createAcc=async()=>{
   if(!cUser.value||!cPass.value) return alert("Fill all fields");
   await set(ref(db,"users/"+cUser.value),{pass:cPass.value});
-  alert("Account Created");
+  alert("Account created");
   back();
 };
 
@@ -227,7 +212,7 @@ function openChat(){
   onChildAdded(ref(db,path),s=>{
     const m=s.val();
     const d=document.createElement("div");
-    d.className="bubble "+(m.by==="user"?"me":"other");
+    d.className="msg "+(m.by==="user"?"me":"other");
     d.innerText=m.text;
     msgs.appendChild(d);
     msgs.scrollTop=msgs.scrollHeight;
