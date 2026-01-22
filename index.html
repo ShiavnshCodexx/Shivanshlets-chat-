@@ -19,7 +19,7 @@ body{
   min-height:100vh;
 }
 
-/* ===== CENTER AUTH ===== */
+/* ===== AUTH ===== */
 .auth{
   min-height:100vh;
   display:flex;
@@ -158,12 +158,14 @@ button{
 
 <!-- ===== AUTH ===== -->
 <div class="auth" id="auth">
-  <div class="card" id="login">
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
     <h1>ShivanshCodex</h1>
     <p>Login to continue</p>
 
-    <input id="lUser" placeholder="Username">
-    <input id="lPass" type="password" placeholder="Password">
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
 
     <div class="switch">
@@ -171,18 +173,20 @@ button{
     </div>
   </div>
 
-  <div class="card" id="signup" style="display:none">
+  <!-- SIGNUP -->
+  <div class="card" id="signupCard" style="display:none">
     <h1>Create Account</h1>
     <p>Join ShivanshCodex</p>
 
-    <input id="sUser" placeholder="Username">
-    <input id="sPass" type="password" placeholder="Password">
+    <input id="signupUser" placeholder="Username">
+    <input id="signupPass" type="password" placeholder="Password">
     <button onclick="signup()">Signup</button>
 
     <div class="switch">
       Already have account? <span onclick="showLogin()">Login</span>
     </div>
   </div>
+
 </div>
 
 <!-- ===== CHAT ===== -->
@@ -198,58 +202,90 @@ button{
   <div class="messages" id="messages"></div>
 
   <div class="inputBar">
-    <input id="msg" placeholder="Type a message...">
-    <button onclick="send()">Send</button>
+    <input id="msgInput" placeholder="Type a message...">
+    <button onclick="sendMsg()">Send</button>
   </div>
 </div>
 
 <script>
+/* ===== SWITCH ===== */
 function showSignup(){
-  login.style.display="none";
-  signup.style.display="block";
-}
-function showLogin(){
-  signup.style.display="none";
-  login.style.display="block";
+  loginCard.style.display="none";
+  signupCard.style.display="block";
 }
 
+function showLogin(){
+  signupCard.style.display="none";
+  loginCard.style.display="block";
+}
+
+/* ===== SIGNUP (FIXED) ===== */
 function signup(){
-  if(!sUser.value || !sPass.value) return alert("Fill all fields");
-  if(localStorage.getItem("u_"+sUser.value)) return alert("User exists");
-  localStorage.setItem("u_"+sUser.value, sPass.value);
-  alert("Account created");
+  const u = signupUser.value.trim();
+  const p = signupPass.value.trim();
+
+  if(u === "" || p === ""){
+    alert("Username aur password required");
+    return;
+  }
+
+  if(localStorage.getItem("user_"+u)){
+    alert("Username already exists");
+    return;
+  }
+
+  localStorage.setItem("user_"+u, p);
+  alert("Account created successfully ✅");
+  signupUser.value="";
+  signupPass.value="";
   showLogin();
 }
 
+/* ===== LOGIN ===== */
 function login(){
-  const saved = localStorage.getItem("u_"+lUser.value);
-  if(saved !== lPass.value) return alert("Wrong details");
-  localStorage.setItem("active", lUser.value);
+  const u = loginUser.value.trim();
+  const p = loginPass.value.trim();
+
+  const saved = localStorage.getItem("user_"+u);
+  if(saved !== p){
+    alert("Wrong username or password");
+    return;
+  }
+
+  localStorage.setItem("activeUser", u);
   openChat();
 }
 
+/* ===== CHAT ===== */
 function openChat(){
   auth.style.display="none";
   chat.style.display="flex";
-  userLabel.textContent = localStorage.getItem("active");
+  userLabel.textContent = localStorage.getItem("activeUser");
 }
 
-function send(){
-  if(!msg.value) return;
-  const d=document.createElement("div");
+function sendMsg(){
+  const text = msgInput.value.trim();
+  if(text === "") return;
+
+  const d = document.createElement("div");
   d.className="msg me";
-  d.textContent=msg.value;
+  d.textContent=text;
   messages.appendChild(d);
-  msg.value="";
-  messages.scrollTop=messages.scrollHeight;
+
+  msgInput.value="";
+  messages.scrollTop = messages.scrollHeight;
 }
 
+/* ===== LOGOUT ===== */
 function logout(){
-  localStorage.removeItem("active");
+  localStorage.removeItem("activeUser");
   location.reload();
 }
 
-if(localStorage.getItem("active")) openChat();
+/* ===== AUTO LOGIN ===== */
+if(localStorage.getItem("activeUser")){
+  openChat();
+}
 </script>
 
 </body>
