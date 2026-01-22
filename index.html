@@ -3,37 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Shivansh Chat</title>
+<title>Shivansh Secure Chat</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{
-  background:linear-gradient(180deg,#050b18,#0b1b35);
+  background:linear-gradient(180deg,#020617,#0f172a);
   color:#fff;min-height:100vh
 }
 .hidden{display:none}
 
 .container{
-  padding:20px;max-width:420px;margin:auto
+  max-width:420px;margin:auto;padding:20px
 }
 h1{text-align:center;margin-bottom:20px}
 
+.card{
+  background:#020617;border-radius:16px;
+  padding:20px;box-shadow:0 0 20px #000
+}
+
 input,button{
-  width:100%;padding:15px;margin-top:12px;
-  border-radius:12px;border:none;font-size:16px
+  width:100%;padding:14px;margin-top:12px;
+  border-radius:12px;border:none;font-size:15px
 }
 input{background:#fff;color:#000}
-button{font-weight:600;cursor:pointer}
 
-.login{background:#00ff9c;color:#000}
-.signup{background:#1e90ff;color:#fff}
-.logout{background:#ff3333;color:#fff}
+.userBtn{background:#00ff9c;color:#000}
+.adminBtn{background:#3b82f6;color:#fff}
+.logout{background:#ef4444;color:#fff}
 
 .chat{
   display:flex;flex-direction:column;height:100vh
 }
 .header{
-  padding:15px;background:#0b1b35;
+  background:#020617;padding:15px;
   display:flex;justify-content:space-between;align-items:center
 }
 .status{font-size:12px;color:#00ff9c}
@@ -43,13 +47,13 @@ button{font-weight:600;cursor:pointer}
 }
 .msg{
   max-width:75%;padding:12px;margin-bottom:10px;
-  border-radius:15px;font-size:15px
+  border-radius:14px;font-size:14px
 }
 .user{background:#00ff9c;color:#000;margin-left:auto}
-.admin{background:#1e90ff}
+.admin{background:#3b82f6}
 
 .input{
-  display:flex;padding:10px;background:#0b1b35
+  display:flex;padding:10px;background:#020617
 }
 .input input{flex:1}
 .input button{
@@ -61,12 +65,21 @@ button{font-weight:600;cursor:pointer}
 
 <body>
 
-<!-- LOGIN / SIGNUP -->
+<!-- AUTH -->
 <div id="auth" class="container">
-  <h1>Login / Signup</h1>
-  <input id="username" placeholder="Choose username">
-  <button class="signup" onclick="create()">Create Account</button>
-  <button class="login" onclick="login()">Login</button>
+  <h1>Secure Login</h1>
+
+  <div class="card">
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+
+    <button class="userBtn" onclick="signup()">Create Account</button>
+    <button class="userBtn" onclick="login()">User Login</button>
+
+    <hr style="margin:15px 0;border:.5px solid #334155">
+
+    <button class="adminBtn" onclick="adminLogin()">Admin Login</button>
+  </div>
 </div>
 
 <!-- CHAT -->
@@ -103,50 +116,64 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let user = localStorage.getItem("user");
-const isAdmin = user === "admin";
+let currentUser = null;
+let isAdmin = false;
 
-if(user) openChat();
-
-window.create = async ()=>{
-  const u = username.value.trim();
-  if(!u) return alert("Username required");
+/* USER SIGNUP */
+window.signup = async ()=>{
+  const u=username.value.trim(), p=password.value;
+  if(!u||!p) return alert("Fill all fields");
 
   const snap = await get(ref(db,"users/"+u));
-  if(snap.exists()) return alert("Username already exists");
+  if(snap.exists()) return alert("Username exists");
 
-  await set(ref(db,"users/"+u),{created:Date.now()});
-  localStorage.setItem("user",u);
-  user=u;openChat();
+  await set(ref(db,"users/"+u),{password:p});
+  alert("Account created, now login");
 }
 
+/* USER LOGIN */
 window.login = async ()=>{
-  const u = username.value.trim();
-  if(!u) return alert("Username required");
-
+  const u=username.value.trim(), p=password.value;
   const snap = await get(ref(db,"users/"+u));
-  if(!snap.exists()) return alert("Account not found");
+  if(!snap.exists()) return alert("User not found");
+  if(snap.val().password!==p) return alert("Wrong password");
 
-  localStorage.setItem("user",u);
-  user=u;openChat();
+  currentUser=u;isAdmin=false;
+  openChat();
+}
+
+/* ADMIN LOGIN */
+window.adminLogin = async ()=>{
+  const p=password.value;
+  const snap = await get(ref(db,"admin/password"));
+  if(!snap.exists()){
+    await set(ref(db,"admin/password"),p);
+    alert("Admin password set");
+  }else if(snap.val()!==p){
+    return alert("Wrong admin password");
+  }
+  currentUser="admin";isAdmin=true;
+  openChat();
 }
 
 function openChat(){
   auth.classList.add("hidden");
   chat.classList.remove("hidden");
-  title.innerText = user === "admin" ? "Admin Panel" : "Hello "+user;
+  title.innerText = isAdmin ? "Admin Panel" : "Hello "+currentUser;
   loadMessages();
 }
 
+/* SEND MESSAGE */
 window.send = ()=>{
   if(!msg.value.trim()) return;
-  const path = user==="admin" ? "admin/messages" : "users/"+user+"/messages";
-  push(ref(db,path),{from:user,text:msg.value,time:Date.now()});
+  const path = isAdmin ? "admin/messages" : "users/"+currentUser+"/messages";
+  push(ref(db,path),{from:currentUser,text:msg.value,time:Date.now()});
   msg.value="";
 }
 
+/* LOAD CHAT */
 function loadMessages(){
-  const path = user==="admin" ? "admin/messages" : "users/"+user+"/messages";
+  const path = isAdmin ? "admin/messages" : "users/"+currentUser+"/messages";
   onChildAdded(ref(db,path),snap=>{
     const m=snap.val();
     const d=document.createElement("div");
@@ -157,10 +184,7 @@ function loadMessages(){
   });
 }
 
-window.logout=()=>{
-  localStorage.clear();
-  location.reload();
-}
+window.logout=()=>location.reload();
 </script>
 
 </body>
