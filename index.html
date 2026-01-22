@@ -8,7 +8,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{
-  min-height:100vh;
+  height:100vh;
   background:#020617;
   color:#fff;
   overflow:hidden;
@@ -17,197 +17,202 @@ body{
 
 /* LIVE BACKGROUND */
 .bg{
-  position:fixed;inset:0;
+  position:fixed;inset:0;z-index:-1;
   background:
-    radial-gradient(circle at 20% 20%,rgba(0,255,156,.15),transparent 40%),
-    radial-gradient(circle at 80% 30%,rgba(59,130,246,.15),transparent 40%),
-    radial-gradient(circle at 50% 80%,rgba(168,85,247,.15),transparent 40%);
-  animation:move 12s linear infinite;
-  z-index:-1;
+    radial-gradient(circle at 10% 20%,rgba(0,255,156,.18),transparent 35%),
+    radial-gradient(circle at 90% 30%,rgba(59,130,246,.18),transparent 35%),
+    radial-gradient(circle at 50% 80%,rgba(168,85,247,.18),transparent 35%);
+  animation:flow 12s ease-in-out infinite;
 }
-@keyframes move{
-  50%{filter:hue-rotate(40deg)}
-}
+@keyframes flow{50%{filter:hue-rotate(40deg)}}
 
-.container{
+/* AUTH */
+.auth{
   max-width:420px;
   margin:auto;
   padding:20px;
 }
-
-h1{
-  text-align:center;
-  margin-bottom:20px;
-  letter-spacing:1px;
-}
-
 .card{
   background:rgba(2,6,23,.85);
-  backdrop-filter:blur(12px);
-  border-radius:18px;
-  padding:20px;
-  box-shadow:0 0 30px rgba(0,0,0,.6);
+  backdrop-filter:blur(14px);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 0 40px rgba(0,0,0,.6);
 }
+h1{text-align:center;margin-bottom:20px}
 
 input,button{
   width:100%;
   padding:14px;
+  margin-top:12px;
   border-radius:14px;
   border:none;
   font-size:15px;
-  margin-top:12px;
 }
 input{background:#fff;color:#000}
 button{font-weight:600;cursor:pointer}
-
 .green{background:#00ff9c;color:#000}
 .blue{background:#3b82f6;color:#fff}
-.red{background:#ef4444;color:#fff}
+.gray{background:#1f2937;color:#fff}
 
-/* CHAT */
-.chat{
-  height:60vh;
-  overflow-y:auto;
-  padding:10px;
-  margin-bottom:10px;
+/* CHAT (WHATSAPP STYLE) */
+.chatWrap{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
 }
-.msg{
-  max-width:80%;
+.top{
+  background:#020617;
+  padding:15px;
+  text-align:center;
+  font-weight:600;
+  border-bottom:1px solid #111;
+}
+.messages{
+  flex:1;
+  padding:14px;
+  overflow-y:auto;
+}
+.bubble{
+  max-width:78%;
   padding:10px 14px;
-  border-radius:14px;
+  border-radius:16px;
   margin-bottom:8px;
   font-size:14px;
 }
-.user{background:#00ff9c;color:#000;margin-left:auto}
-.admin{background:#3b82f6}
-
-.footer{
-  display:flex;
-  gap:8px;
+.me{
+  background:#00ff9c;
+  color:#000;
+  margin-left:auto;
+  border-bottom-right-radius:4px;
 }
-.footer input{flex:1}
+.other{
+  background:#1f2937;
+  border-bottom-left-radius:4px;
+}
+.inputBar{
+  display:flex;
+  padding:10px;
+  gap:8px;
+  background:#020617;
+}
+.inputBar input{flex:1}
 </style>
 </head>
 
 <body>
 <div class="bg"></div>
 
-<div class="container">
-
 <!-- LOGIN -->
-<div id="loginBox" class="card">
-<h1>Shivanshcodex</h1>
+<div id="loginBox" class="auth">
+  <div class="card">
+    <h1>Shivanshcodex</h1>
 
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button class="green" onclick="login()">Enter</button>
+    <input id="lUser" placeholder="Username">
+    <input id="lPass" type="password" placeholder="Password">
+    <button class="green" onclick="login()">Login</button>
 
-<hr style="margin:18px 0;border:.5px solid #334155">
+    <button class="gray" onclick="showCreate()">Create Account</button>
 
-<input id="adminUser" placeholder="Admin Username">
-<input id="adminPass" type="password" placeholder="Admin Password">
-<button class="blue" onclick="adminLogin()">Admin Login</button>
+    <hr style="margin:18px 0;border:.5px solid #334155">
+
+    <input id="aUser" placeholder="Admin Username">
+    <input id="aPass" type="password" placeholder="Admin Password">
+    <button class="blue" onclick="adminLogin()">Admin Login</button>
+  </div>
+</div>
+
+<!-- CREATE ACCOUNT -->
+<div id="createBox" class="auth hidden">
+  <div class="card">
+    <h1>Create Account</h1>
+    <input id="cUser" placeholder="Create Username">
+    <input id="cPass" type="password" placeholder="Create Password">
+    <button class="green" onclick="createAcc()">Create</button>
+    <button class="gray" onclick="back()">Back</button>
+  </div>
 </div>
 
 <!-- CHAT -->
-<div id="chatBox" class="card hidden">
-<h1 id="chatTitle">Chat</h1>
-
-<div class="chat" id="chat"></div>
-
-<div class="footer">
-  <input id="msg" placeholder="Type message…">
-  <button class="green" onclick="send()">Send</button>
+<div id="chatBox" class="hidden chatWrap">
+  <div class="top" id="chatTitle"></div>
+  <div class="messages" id="msgs"></div>
+  <div class="inputBar">
+    <input id="msg" placeholder="Message…">
+    <button class="green" onclick="send()">Send</button>
+  </div>
 </div>
 
-<button class="red" onclick="logout()" style="margin-top:10px">Logout</button>
-</div>
-
-</div>
-
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getDatabase, ref, set, push, get, onChildAdded } 
+import { getDatabase, ref, set, push, get, onChildAdded }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
-  authDomain: "shivanshchat-b66da.firebaseapp.com",
-  projectId: "shivanshchat-b66da",
-  storageBucket: "shivanshchat-b66da.firebasestorage.app",
-  messagingSenderId: "715877321366",
-  appId: "1:715877321366:web:f7fcb3bb106518978350b7"
+  apiKey:"AIzaSyAYsZ0jwE2uUVM8A0HPkq_cCYWWhb6eVlE",
+  authDomain:"shivanshchat-b66da.firebaseapp.com",
+  projectId:"shivanshchat-b66da",
+  storageBucket:"shivanshchat-b66da.firebasestorage.app",
+  messagingSenderId:"715877321366",
+  appId:"1:715877321366:web:f7fcb3bb106518978350b7"
 });
+const db=getDatabase(app);
 
-const db = getDatabase(app);
+let user="",admin=false;
 
-let currentUser = "";
-let isAdmin = false;
+/* UI */
+window.showCreate=()=>{loginBox.classList.add("hidden");createBox.classList.remove("hidden")}
+window.back=()=>{createBox.classList.add("hidden");loginBox.classList.remove("hidden")}
+
+/* CREATE ACCOUNT */
+window.createAcc=async()=>{
+  if(!cUser.value||!cPass.value) return alert("Fill all fields");
+  await set(ref(db,"users/"+cUser.value),{pass:cPass.value});
+  alert("Account Created");
+  back();
+};
 
 /* USER LOGIN */
-window.login = async () => {
-  const u = username.value.trim();
-  const p = password.value.trim();
-  if(!u || !p) return alert("Fill all fields");
-
-  const userRef = ref(db,"users/"+u);
-  const snap = await get(userRef);
-
-  if(!snap.exists()){
-    await set(userRef,{password:p});
-  }else if(snap.val().password !== p){
-    return alert("Wrong password");
-  }
-
-  currentUser = u;
+window.login=async()=>{
+  const snap=await get(ref(db,"users/"+lUser.value));
+  if(!snap.exists()||snap.val().pass!==lPass.value)
+    return alert("Invalid login");
+  user=lUser.value;
   openChat("Chat with Shivansh");
 };
 
 /* ADMIN LOGIN */
-window.adminLogin = () => {
-  if(
-    adminUser.value === "shiavnsh@62718" &&
-    adminPass.value === "chrome@7282"
-  ){
-    isAdmin = true;
+window.adminLogin=()=>{
+  if(aUser.value==="shiavnsh@62718"&&aPass.value==="chrome@7282"){
+    admin=true;
     openChat("Admin Panel");
-  } else {
-    alert("Wrong admin login");
-  }
+  }else alert("Wrong admin login");
 };
 
+/* CHAT */
 function openChat(title){
   loginBox.classList.add("hidden");
+  createBox.classList.add("hidden");
   chatBox.classList.remove("hidden");
-  chatTitle.innerText = title;
-  chat.innerHTML = "";
-
-  const path = isAdmin ? "messages" : "messages/"+currentUser;
-
-  onChildAdded(ref(db,path),snap=>{
-    const m = snap.val();
-    const d = document.createElement("div");
-    d.className = "msg " + m.by;
-    d.innerText = m.text;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
+  chatTitle.innerText=title;
+  msgs.innerHTML="";
+  const path=admin?"messages":"messages/"+user;
+  onChildAdded(ref(db,path),s=>{
+    const m=s.val();
+    const d=document.createElement("div");
+    d.className="bubble "+(m.by==="user"?"me":"other");
+    d.innerText=m.text;
+    msgs.appendChild(d);
+    msgs.scrollTop=99999;
   });
 }
 
-window.send = () => {
-  if(!msg.value.trim()) return;
-
-  const path = isAdmin ? "messages" : "messages/"+currentUser;
-  push(ref(db,path),{
-    text: msg.value,
-    by: isAdmin ? "admin" : "user",
-    time: Date.now()
-  });
-  msg.value = "";
+window.send=()=>{
+  if(!msg.value) return;
+  const path=admin?"messages":"messages/"+user;
+  push(ref(db,path),{text:msg.value,by:admin?"admin":"user"});
+  msg.value="";
 };
-
-window.logout = () => location.reload();
 </script>
 </body>
 </html>
