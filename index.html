@@ -3,71 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Shivansh Admin Chat</title>
+<title>Shivansh Chat</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-body{background:#0b1220;color:#fff;height:100vh}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{
+  background:linear-gradient(180deg,#050b18,#0b1b35);
+  color:#fff;min-height:100vh
+}
 .hidden{display:none}
 
-.screen{padding:20px}
-input,button{
-  width:100%;padding:14px;margin-top:10px;
-  border-radius:10px;border:none;font-size:16px
+.container{
+  padding:20px;max-width:420px;margin:auto
 }
-button{background:#00ff9c;color:#000;font-weight:600}
+h1{text-align:center;margin-bottom:20px}
+
+input,button{
+  width:100%;padding:15px;margin-top:12px;
+  border-radius:12px;border:none;font-size:16px
+}
+input{background:#fff;color:#000}
+button{font-weight:600;cursor:pointer}
+
+.login{background:#00ff9c;color:#000}
+.signup{background:#1e90ff;color:#fff}
+.logout{background:#ff3333;color:#fff}
 
 .chat{
   display:flex;flex-direction:column;height:100vh
 }
 .header{
-  padding:15px;background:#111b30;
+  padding:15px;background:#0b1b35;
   display:flex;justify-content:space-between;align-items:center
 }
+.status{font-size:12px;color:#00ff9c}
+
 .messages{
   flex:1;padding:15px;overflow-y:auto
 }
 .msg{
-  margin-bottom:10px;max-width:80%;
-  padding:10px;border-radius:12px
+  max-width:75%;padding:12px;margin-bottom:10px;
+  border-radius:15px;font-size:15px
 }
 .user{background:#00ff9c;color:#000;margin-left:auto}
-.admin{background:#222}
+.admin{background:#1e90ff}
+
 .input{
-  display:flex;padding:10px;background:#111b30
+  display:flex;padding:10px;background:#0b1b35
 }
 .input input{flex:1}
-.input button{width:90px;margin-left:10px}
+.input button{
+  width:80px;margin-left:8px;
+  background:#00ff9c;color:#000
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="screen">
-  <h2>Login / Signup</h2>
-  <input id="username" placeholder="Username">
-  <button onclick="login()">Enter Chat</button>
+<!-- LOGIN / SIGNUP -->
+<div id="auth" class="container">
+  <h1>Login / Signup</h1>
+  <input id="username" placeholder="Choose username">
+  <button class="signup" onclick="create()">Create Account</button>
+  <button class="login" onclick="login()">Login</button>
 </div>
 
 <!-- CHAT -->
 <div id="chat" class="chat hidden">
   <div class="header">
-    <span id="title"></span>
-    <button onclick="logout()" style="background:red;color:#fff">Logout</button>
+    <div>
+      <div id="title"></div>
+      <div class="status">● Online</div>
+    </div>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 
   <div id="messages" class="messages"></div>
 
   <div class="input">
-    <input id="msg" placeholder="Type message">
+    <input id="msg" placeholder="Type message...">
     <button onclick="send()">Send</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
+import { getDatabase, ref, set, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDwqv5thtLTbc2MBxd0QHXKQMNATubJNqw",
@@ -81,46 +103,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let currentUser = localStorage.getItem("user");
-const isAdmin = currentUser === "admin";
+let user = localStorage.getItem("user");
+const isAdmin = user === "admin";
 
-if(currentUser) openChat();
+if(user) openChat();
 
-window.login = ()=>{
+window.create = async ()=>{
   const u = username.value.trim();
   if(!u) return alert("Username required");
+
+  const snap = await get(ref(db,"users/"+u));
+  if(snap.exists()) return alert("Username already exists");
+
+  await set(ref(db,"users/"+u),{created:Date.now()});
   localStorage.setItem("user",u);
-  currentUser = u;
-  openChat();
+  user=u;openChat();
+}
+
+window.login = async ()=>{
+  const u = username.value.trim();
+  if(!u) return alert("Username required");
+
+  const snap = await get(ref(db,"users/"+u));
+  if(!snap.exists()) return alert("Account not found");
+
+  localStorage.setItem("user",u);
+  user=u;openChat();
 }
 
 function openChat(){
-  login.classList.add("hidden");
+  auth.classList.add("hidden");
   chat.classList.remove("hidden");
-  title.innerText = currentUser === "admin" ? "ADMIN PANEL" : "Hello "+currentUser;
+  title.innerText = user === "admin" ? "Admin Panel" : "Hello "+user;
   loadMessages();
 }
 
 window.send = ()=>{
   if(!msg.value.trim()) return;
-  const path = isAdmin ? "chats/"+selectedUser : "chats/"+currentUser;
-  push(ref(db,path+"/messages"),{
-    from: currentUser,
-    text: msg.value,
-    time: Date.now()
-  });
+  const path = user==="admin" ? "admin/messages" : "users/"+user+"/messages";
+  push(ref(db,path),{from:user,text:msg.value,time:Date.now()});
   msg.value="";
 }
 
 function loadMessages(){
-  const path = isAdmin ? "chats" : "chats/"+currentUser;
-  const mRef = ref(db,path+"/messages");
-
-  onChildAdded(mRef,snap=>{
-    const m = snap.val();
-    const d = document.createElement("div");
+  const path = user==="admin" ? "admin/messages" : "users/"+user+"/messages";
+  onChildAdded(ref(db,path),snap=>{
+    const m=snap.val();
+    const d=document.createElement("div");
     d.className="msg "+(m.from==="admin"?"admin":"user");
-    d.innerText = m.text;
+    d.innerText=m.text;
     messages.appendChild(d);
     messages.scrollTop=messages.scrollHeight;
   });
